@@ -1,0 +1,3 @@
+[submodule "src/3rdparty/http-parser"]
+	path = src/3rdparty/http-parser
+	url = https://github.com/nodejs/http-parser.git

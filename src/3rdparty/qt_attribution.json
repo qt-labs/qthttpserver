@@ -1,0 +1,11 @@
+{
+    "Id": "http-parser",
+    "Name": "HTTP request/response parser for C",
+    "QDocModule": "qthttpserver",
+    "QtUsage": "Used in Qt HttpServer.",
+
+    "License": "MIT License",
+    "LicenseId": "MIT",
+    "LicenseFile": "http-parser/LICENSE-MIT",
+    "Copyright": "Copyright Joyent, Inc. and other Node contributors. All rights reserved."
+}
