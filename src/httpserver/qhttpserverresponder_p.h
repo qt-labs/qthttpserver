@@ -37,58 +37,78 @@
 **
 ****************************************************************************/
 
-#ifndef QABSTRACTHTTPSERVER_H
-#define QABSTRACTHTTPSERVER_H
-
-#include <QtCore/qobject.h>
+#ifndef QHTTPSERVERRESPONDER_P_H
+#define QHTTPSERVERRESPONDER_P_H
 
 #include <QtHttpServer/qthttpserverglobal.h>
+#include <QtHttpServer/qhttpserverrequest.h>
+#include <QtHttpServer/qhttpserverresponder.h>
 
-#include <QtNetwork/qhostaddress.h>
+#include <QtCore/qcoreapplication.h>
+#include <QtCore/qpair.h>
+#include <QtCore/qpointer.h>
+#include <QtCore/qsysinfo.h>
+
+#include <type_traits>
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists for the convenience
+// of QHttpServer. This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
 
 QT_BEGIN_NAMESPACE
 
-class QHttpServerRequest;
-class QHttpServerResponder;
-class QTcpServer;
-class QTcpSocket;
-class QWebSocket;
-
-class QAbstractHttpServerPrivate;
-class Q_HTTPSERVER_EXPORT QAbstractHttpServer : public QObject
+class QHttpServerResponderPrivate
 {
-    Q_OBJECT
+    using StatusCode = QHttpServerResponder::StatusCode;
 
 public:
-    QAbstractHttpServer(QObject *parent = nullptr);
+    QHttpServerResponderPrivate(const QHttpServerRequest &request, QTcpSocket *const socket) :
+        request(request),
+        socket(socket)
+    {
+        const auto server = QStringLiteral("%1/%2(%3)")
+                .arg(QCoreApplication::instance()->applicationName())
+                .arg(QCoreApplication::instance()->applicationVersion())
+                .arg(QSysInfo::prettyProductName());
+        addHeader(QByteArrayLiteral("Server"), server.toUtf8());
+    }
 
-    int listen(const QHostAddress &address = QHostAddress::Any, quint16 port = 0);
+    inline bool addHeader(const QByteArray &key, const QByteArray &value)
+    {
+        const auto hash = qHash(key.toLower());
+        if (m_headers.contains(hash))
+            return false;
+        m_headers.insert(hash, qMakePair(key, value));
+        return true;
+    }
 
-    void bind(QTcpServer *server = nullptr);
-    QVector<QTcpServer *> servers() const;
+    void writeStatusLine(StatusCode status = StatusCode::Ok,
+                         const QPair<quint8, quint8> &version = qMakePair(1u, 1u)) const;
+    void writeHeaders() const;
+    void writeBody(const QByteArray &body) const;
 
-Q_SIGNALS:
-    void missingHandler(const QHttpServerRequest &request, QTcpSocket *socket);
+    const QHttpServerRequest &request;
+#if defined(QT_DEBUG)
+    const QPointer<QTcpSocket> socket;
+#else
+    QTcpSocket *const socket;
+#endif
 
-#if defined(QT_WEBSOCKETS_LIB)
-    void newWebSocketConnection();
-
-public:
-    bool hasPendingWebSocketConnections() const;
-    QWebSocket *nextPendingWebSocketConnection();
-#endif // defined(QT_WEBSOCKETS_LIB)
-
-protected:
-    QAbstractHttpServer(QAbstractHttpServerPrivate &dd, QObject *parent = nullptr);
-
-    virtual bool handleRequest(const QHttpServerRequest &request, QTcpSocket *socket) = 0;
-    static QHttpServerResponder makeResponder(const QHttpServerRequest &request,
-                                              QTcpSocket *socket);
+    QMap<uint, QPair<QByteArray, QByteArray>> m_headers;
 
 private:
-    Q_DECLARE_PRIVATE(QAbstractHttpServer)
+    void writeHeader(const QByteArray &header, const QByteArray &value) const;
+
+public:
+    const decltype(m_headers) &headers() const { return m_headers; }
 };
 
 QT_END_NAMESPACE
 
-#endif // QABSTRACTHTTPSERVER_H
+#endif // QHTTPSERVERRESPONDER_P_H

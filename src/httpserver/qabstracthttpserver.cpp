@@ -38,6 +38,7 @@
 #include <QtHttpServer/qabstracthttpserver.h>
 
 #include <QtHttpServer/qhttpserverrequest.h>
+#include <QtHttpServer/qhttpserverresponder.h>
 #include <private/qabstracthttpserver_p.h>
 #include <private/qhttpserverrequest_p.h>
 
@@ -89,6 +90,7 @@ void QAbstractHttpServerPrivate::handleReadyRead()
 {
     Q_Q(QAbstractHttpServer);
     auto socket = qobject_cast<QTcpSocket *>(currentSender->sender);
+    Q_ASSERT(socket);
 #if !defined(QT_NO_USERDATA)
     auto request = static_cast<QHttpServerRequest *>(socket->userData(uint(userDataId)));
 #else
@@ -270,5 +272,11 @@ QWebSocket *QAbstractHttpServer::nextPendingWebSocketConnection()
     return d->websocketServer.nextPendingConnection();
 }
 #endif
+
+QHttpServerResponder QAbstractHttpServer::makeResponder(const QHttpServerRequest &request,
+                                                        QTcpSocket *socket)
+{
+    return QHttpServerResponder(request, socket);
+}
 
 QT_END_NAMESPACE

@@ -2,5 +2,5 @@ TEMPLATE = subdirs
 
 SUBDIRS = \
     cmake \
-    qabstracthttpserver
-
+    qabstracthttpserver \
+    qhttpserverresponder
