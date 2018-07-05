@@ -61,6 +61,7 @@ private slots:
     void checkListenWarns();
     void websocket();
     void servers();
+    void fork();
 };
 
 void tst_QAbstractHttpServer::request_data()
@@ -170,6 +171,63 @@ void tst_QAbstractHttpServer::servers()
     QTRY_COMPARE(server.servers().count(), 2);
     QTRY_COMPARE(server.servers().first(), tcpServer);
     QTRY_COMPARE(server.servers().last(), tcpServer2);
+}
+
+void tst_QAbstractHttpServer::fork()
+{
+#if defined(Q_OS_UNIX)
+    const auto message = QByteArrayLiteral("Hello world!");
+    struct HttpServer : QAbstractHttpServer
+    {
+        const QByteArray &message;
+        HttpServer(const QByteArray &message) : message(message) {}
+        bool handleRequest(const QHttpServerRequest &, QTcpSocket *socket) override
+        {
+            socket->write(QByteArrayLiteral("HTTP/1.1 200 OK"));
+            socket->write(QByteArrayLiteral("\r\n"));
+            socket->write(QByteArrayLiteral("Content-Length: "));
+            socket->write(QByteArray::number(message.size()));
+            socket->write(QByteArrayLiteral("\r\n"));
+            socket->write(QByteArrayLiteral("Connection: close"));
+            socket->write(QByteArrayLiteral("\r\n"));
+            socket->write(QByteArrayLiteral("Content-Type: text/html"));
+            socket->write(QByteArrayLiteral("\r\n\r\n"));
+            socket->write(message);
+            socket->flush();
+            ::kill(::getpid(), SIGKILL);  // Avoids continuing running tests in the child process
+            return true;
+        }
+    } server = { message };
+
+    struct TcpServer : QTcpServer
+    {
+        void incomingConnection(qintptr socketDescriptor) override
+        {
+            if (::fork() != 0) {
+                // Parent process: Create a QTcpSocket with the descriptor to close it properly
+                QTcpSocket socket;
+                socket.setSocketDescriptor(socketDescriptor);
+                socket.close();
+            } else {
+                // Child process: It will parse the request and call HttpServer::handleRequest
+                QTcpServer::incomingConnection(socketDescriptor);
+            }
+        }
+    };
+    auto tcpServer = new TcpServer;
+    tcpServer->listen();
+    server.bind(tcpServer);
+    QNetworkAccessManager networkAccessManager;
+    const QUrl url(QString::fromLatin1("http://localhost:%1").arg(tcpServer->serverPort()));
+    auto reply = networkAccessManager.get(QNetworkRequest(url));
+    QSignalSpy finishedSpy(reply, &QNetworkReply::finished);
+    QTRY_VERIFY(finishedSpy.count());
+    QCOMPARE(reply->readAll(), message);
+    reply->close();
+    reply->deleteLater();
+#else
+    QSKIP("fork() not supported by this platform");
+#endif
 }
 
 QT_END_NAMESPACE
