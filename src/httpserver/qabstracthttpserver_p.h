@@ -58,6 +58,8 @@
 #include <QtWebSockets/qwebsocketserver.h>
 #endif // defined(QT_WEBSOCKETS_LIB)
 
+QT_BEGIN_NAMESPACE
+
 class QHttpServerRequest;
 
 class QAbstractHttpServerPrivate: public QObjectPrivate
@@ -83,5 +85,7 @@ public:
     void handleNewConnections();
     void handleReadyRead();
 };
+
+QT_END_NAMESPACE
 
 #endif // QABSTRACTHTTPSERVER_P_H
