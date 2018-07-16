@@ -50,6 +50,8 @@
 //
 // We mean it.
 
+#include <QtHttpServer/qabstracthttpserver.h>
+
 #include <private/qobject_p.h>
 
 #if defined(QT_WEBSOCKETS_LIB)
