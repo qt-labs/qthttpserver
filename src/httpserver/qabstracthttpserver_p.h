@@ -51,6 +51,7 @@
 // We mean it.
 
 #include <QtHttpServer/qabstracthttpserver.h>
+#include <QtHttpServer/qthttpserverglobal.h>
 
 #include <private/qobject_p.h>
 
@@ -62,7 +63,7 @@ QT_BEGIN_NAMESPACE
 
 class QHttpServerRequest;
 
-class QAbstractHttpServerPrivate: public QObjectPrivate
+class Q_HTTPSERVER_EXPORT QAbstractHttpServerPrivate: public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QAbstractHttpServer)
 

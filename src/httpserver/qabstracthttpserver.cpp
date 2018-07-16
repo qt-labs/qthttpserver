@@ -140,7 +140,11 @@ void QAbstractHttpServerPrivate::handleReadyRead()
 }
 
 QAbstractHttpServer::QAbstractHttpServer(QObject *parent)
-    : QObject(*new QAbstractHttpServerPrivate, parent)
+    : QAbstractHttpServer(*new QAbstractHttpServerPrivate, parent)
+{}
+
+QAbstractHttpServer::QAbstractHttpServer(QAbstractHttpServerPrivate &dd, QObject *parent)
+    : QObject(dd, parent)
 {
 #if defined(QT_WEBSOCKETS_LIB)
     Q_D(QAbstractHttpServer);

@@ -78,6 +78,8 @@ public:
 #endif // defined(QT_WEBSOCKETS_LIB)
 
 protected:
+    QAbstractHttpServer(QAbstractHttpServerPrivate &dd, QObject *parent = nullptr);
+
     virtual bool handleRequest(const QHttpServerRequest &request, QTcpSocket *socket) = 0;
 
 private:
