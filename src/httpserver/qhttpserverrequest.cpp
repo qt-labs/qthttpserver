@@ -67,7 +67,7 @@ Q_HTTPSERVER_EXPORT QDebug operator<<(QDebug debug, const QHttpServerRequest &re
 QDebug operator<<(QDebug debug, const http_parser *const httpParser)
 {
     const auto oldSetting = debug.autoInsertSpaces();
-    debug.nospace() << "http_parser(" << static_cast<const void * const>(httpParser) << ": ";
+    debug.nospace() << "http_parser(" << static_cast<const void *>(httpParser) << ": ";
     debug << "HTTP " << httpParser->http_major << "." << httpParser->http_minor << " "
           << http_method_str(http_method(httpParser->method)) << ')';
     debug.setAutoInsertSpaces(oldSetting);
