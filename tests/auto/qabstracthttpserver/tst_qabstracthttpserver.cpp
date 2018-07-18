@@ -80,6 +80,8 @@ void tst_QAbstractHttpServer::request_data()
     QTest::addRow("0.0.0.0") << "0.0.0.0" << "/" << QString();
     QTest::addRow("localhost") << "localhost" << "/" << QString();
     QTest::addRow("localhost with query") << "localhost" << "/" << QString("key=value");
+    QTest::addRow("0.0.0.0 path with spaces") << "0.0.0.0" << "/test test" << QString();
+    QTest::addRow("0.0.0.0 path with spec spaces") << "0.0.0.0" << "/test%20test" << QString();
 }
 
 void tst_QAbstractHttpServer::request()
