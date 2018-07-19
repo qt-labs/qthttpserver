@@ -116,11 +116,10 @@ void tst_QAbstractHttpServer::request()
     if (!query.isEmpty())
         url.setQuery(query);
     const QNetworkRequest request(url);
-    auto reply = networkAccessManager.get(request);
+    networkAccessManager.get(request);
     QTRY_COMPARE(server.method, QHttpServerRequest::Method::Get);
     QCOMPARE(server.url, url);
     QCOMPARE(server.body, QByteArray());
-    reply->deleteLater();
 }
 
 void tst_QAbstractHttpServer::checkListenWarns()
