@@ -102,6 +102,7 @@ void QAbstractHttpServerPrivate::handleReadyRead()
         socket->disconnect();
         return;
     }
+
     if (!requestPrivate->httpParser.upgrade &&
             requestPrivate->state != QHttpServerRequestPrivate::State::OnMessageComplete)
         return; // Partial read
@@ -132,11 +133,12 @@ void QAbstractHttpServerPrivate::handleReadyRead()
         }
         qCWarning(lcHttpServer, "Upgrade to %s not supported", qPrintable(it.value().second));
         socket->disconnectFromHost();
-    } else {
-        socket->commitTransaction();
-        if (!q->handleRequest(*request, socket))
-            Q_EMIT q->missingHandler(*request, socket);
+        return;
     }
+
+    socket->commitTransaction();
+    if (!q->handleRequest(*request, socket))
+        Q_EMIT q->missingHandler(*request, socket);
 }
 
 QAbstractHttpServer::QAbstractHttpServer(QObject *parent)
@@ -165,10 +167,10 @@ int QAbstractHttpServer::listen(const QHostAddress &address, quint16 port)
     if (listening) {
         bind(tcpServer);
         return tcpServer->serverPort();
-    } else {
-        delete tcpServer;
-        return -1;
     }
+
+    delete tcpServer;
+    return -1;
 }
 
 /*!
