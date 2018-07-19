@@ -156,17 +156,19 @@ QAbstractHttpServer::QAbstractHttpServer(QAbstractHttpServerPrivate &dd, QObject
 /*!
     Tries to bind a \c QTcpServer to \a address and \a port.
 
-    Returns \c true upon success, false otherwise.
+    Returns the server port upon success, -1 otherwise.
 */
-bool QAbstractHttpServer::listen(const QHostAddress &address, quint16 port)
+int QAbstractHttpServer::listen(const QHostAddress &address, quint16 port)
 {
     auto tcpServer = new QTcpServer(this);
     const auto listening = tcpServer->listen(address, port);
-    if (listening)
+    if (listening) {
         bind(tcpServer);
-    else
+        return tcpServer->serverPort();
+    } else {
         delete tcpServer;
-    return listening;
+        return -1;
+    }
 }
 
 /*!
