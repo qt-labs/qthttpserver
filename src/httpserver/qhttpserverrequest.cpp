@@ -44,7 +44,7 @@
 #include <QtCore/qdebug.h>
 #include <QtCore/qloggingcategory.h>
 #include <QtNetwork/qtcpsocket.h>
-#if defined(QT_FEATURE_ssl)
+#if QT_CONFIG(ssl)
 #include <QtNetwork/qsslsocket.h>
 #endif
 
@@ -102,7 +102,7 @@ bool QHttpServerRequestPrivate::parse(QIODevice *socket)
 {
     const auto fragment = socket->readAll();
     if (fragment.size()) {
-#if defined(QT_FEATURE_ssl)
+#if QT_CONFIG(ssl)
         auto sslSocket = qobject_cast<QSslSocket *>(socket);
         url.setScheme(sslSocket && sslSocket->isEncrypted() ? QStringLiteral("https")
                                                             : QStringLiteral("http"));
