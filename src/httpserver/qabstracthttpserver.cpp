@@ -44,6 +44,7 @@
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qmetaobject.h>
 #include <QtNetwork/qtcpserver.h>
+#include <QtNetwork/qtcpsocket.h>
 
 #include "http_parser.h"
 
