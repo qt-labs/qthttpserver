@@ -39,6 +39,8 @@
 #include <QtHttpServer/qabstracthttpserver.h>
 
 #include <QtCore/qjsondocument.h>
+#include <QtCore/qfile.h>
+#include <QtCore/qtemporaryfile.h>
 #include <QtTest/qsignalspy.h>
 #include <QtTest/qtest.h>
 #include <QtNetwork/qnetworkaccessmanager.h>
@@ -63,6 +65,8 @@ private slots:
     void writeStatusCode_data();
     void writeStatusCode();
     void writeJson();
+    void writeFile_data();
+    void writeFile();
 };
 
 #define qWaitForFinished(REPLY) QVERIFY(QSignalSpy(REPLY, &QNetworkReply::finished).wait())
@@ -150,6 +154,54 @@ void tst_QHttpServerResponder::writeJson()
     QCOMPARE(reply->error(), QNetworkReply::NoError);
     QCOMPARE(reply->header(QNetworkRequest::ContentTypeHeader), QByteArrayLiteral("text/json"));
     QCOMPARE(QJsonDocument::fromJson(reply->readAll()), json);
+}
+
+void tst_QHttpServerResponder::writeFile_data()
+{
+    QTest::addColumn<QIODevice *>("iodevice");
+    QTest::addColumn<int>("code");
+    QTest::addColumn<QString>("type");
+    QTest::addColumn<QString>("data");
+
+    QTest::addRow("index.html")
+        << qobject_cast<QIODevice *>(new QFile(QFINDTESTDATA("index.html"), this))
+        << 200
+        << "text/html"
+        << "<html>\n</html>\n";
+
+    QTest::addRow("index1.html - not found")
+        << qobject_cast<QIODevice *>(new QFile("./index1.html", this))
+        << 500
+        << "application/x-empty"
+        << "";
+
+    QTest::addRow("temporary file")
+        << qobject_cast<QIODevice *>(new QTemporaryFile(this))
+        << 200
+        << "text/html"
+        << "";
+}
+
+void tst_QHttpServerResponder::writeFile()
+{
+    QFETCH(QIODevice *, iodevice);
+    QFETCH(int, code);
+    QFETCH(QString, type);
+    QFETCH(QString, data);
+
+    QSignalSpy spyDestroyIoDevice(iodevice, &QObject::destroyed);
+
+    HttpServer server([&iodevice](QHttpServerResponder responder) {
+        responder.write(iodevice, "text/html");
+    });
+    auto reply = networkAccessManager->get(QNetworkRequest(server.url));
+    QTRY_VERIFY(reply->isFinished());
+
+    QCOMPARE(reply->header(QNetworkRequest::ContentTypeHeader), type);
+    QCOMPARE(reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt(), code);
+    QCOMPARE(reply->readAll(), data);
+
+    QCOMPARE(spyDestroyIoDevice.count(), 1);
 }
 
 QT_END_NAMESPACE

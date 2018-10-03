@@ -145,7 +145,7 @@ struct IOChunkedTransfer
     char buffer[BUFFERSIZE];
     qint64 beginIndex = -1;
     qint64 endIndex = -1;
-    QScopedPointer<QIODevice, QScopedPointerDeleteLater> source;
+    QPointer<QIODevice> source;
     const QPointer<QIODevice> sink;
     const QMetaObject::Connection bytesWrittenConnection;
     const QMetaObject::Connection readyReadConnection;
@@ -155,11 +155,15 @@ struct IOChunkedTransfer
         bytesWrittenConnection(QObject::connect(sink, &QIODevice::bytesWritten, [this] () {
               writeToOutput();
         })),
-        readyReadConnection(QObject::connect(source.get(), &QIODevice::readyRead, [this] () {
+        readyReadConnection(QObject::connect(source, &QIODevice::readyRead, [this] () {
             readFromInput();
         }))
     {
         Q_ASSERT(!source->atEnd());  // TODO error out
+        QObject::connect(sink, &QObject::destroyed, source, &QObject::deleteLater);
+        QObject::connect(source, &QObject::destroyed, [this] () {
+            delete this;
+        });
         readFromInput();
     }
 
@@ -184,7 +188,6 @@ struct IOChunkedTransfer
         if (endIndex < 0) {
             endIndex = beginIndex; // Mark the buffer as empty
             qCWarning(lc, "Error reading chunk: %s", qPrintable(source->errorString()));
-            return;
         } else if (endIndex) {
             memset(buffer + endIndex, 0, sizeof(buffer) - std::size_t(endIndex));
             writeToOutput();
@@ -204,9 +207,9 @@ struct IOChunkedTransfer
         beginIndex += writtenBytes;
         if (isBufferEmpty()) {
             if (source->bytesAvailable())
-                QTimer::singleShot(0, source.get(), [this]() { readFromInput(); });
+                QTimer::singleShot(0, source, [this]() { readFromInput(); });
             else if (source->atEnd()) // Finishing
-                source.reset();
+                source->deleteLater();
         }
     }
 };
@@ -253,33 +256,24 @@ void QHttpServerResponder::write(QIODevice *data,
     Q_D(QHttpServerResponder);
     Q_ASSERT(d->socket);
     QScopedPointer<QIODevice, QScopedPointerDeleteLater> input(data);
-    auto socket = d->socket;
-    QObject::connect(input.get(), &QIODevice::aboutToClose, [&input](){ input.reset(); });
-    // TODO protect keep alive sockets
-    QObject::connect(input.get(), &QObject::destroyed, socket, &QObject::deleteLater);
-    QObject::connect(socket, &QObject::destroyed, [&input](){ input.reset(); });
 
     input->setParent(nullptr);
-    auto openMode = input->openMode();
-    if (!(openMode & QIODevice::ReadOnly)) {
-        if (openMode == QIODevice::NotOpen) {
-            if (!input->open(QIODevice::ReadOnly)) {
-                // TODO Add developer error handling
-                // TODO Send 500
-                qCDebug(lc, "500: Could not open device %s", qPrintable(input->errorString()));
-                return;
-            }
-        } else {
-            // TODO Handle that and send 500, the device is opened but not for reading.
-            // That doesn't make sense
-            qCDebug(lc) << "500: Device is opened in a wrong mode" << openMode
-                        << qPrintable(input->errorString());
+    if (!input->isOpen()) {
+        if (!input->open(QIODevice::ReadOnly)) {
+            // TODO Add developer error handling
+            qCDebug(lc, "500: Could not open device %s", qPrintable(input->errorString()));
+            write(StatusCode::InternalServerError);
             return;
         }
+    } else if (!(input->openMode() & QIODevice::ReadOnly)) {
+        // TODO Add developer error handling
+        qCDebug(lc) << "500: Device is opened in a wrong mode" << input->openMode();
+        write(StatusCode::InternalServerError);
+        return;
     }
-    if (!socket->isOpen()) {
+
+    if (!d->socket->isOpen()) {
         qCWarning(lc, "Cannot write to socket. It's disconnected");
-        delete socket;
         return;
     }
 
@@ -291,17 +285,15 @@ void QHttpServerResponder::write(QIODevice *data,
     d->addHeader(contentTypeString, mimeType);
 
     d->writeHeaders();
-    socket->write("\r\n");
+    d->socket->write("\r\n");
 
     if (input->atEnd()) {
         qCDebug(lc, "No more data available.");
         return;
     }
 
-    auto transfer = new IOChunkedTransfer<>(input.take(), socket);
-    QObject::connect(transfer->source.get(), &QObject::destroyed, [transfer]() {
-        delete transfer;
-    });
+    // input takes ownership of the IOChunkedTransfer pointer inside his constructor
+    new IOChunkedTransfer<>(input.take(), d->socket);
 }
 
 /*!
