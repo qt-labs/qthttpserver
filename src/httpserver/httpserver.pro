@@ -1,7 +1,7 @@
 TARGET = QtHttpServer
 INCLUDEPATH += .
 
-QT += network core-private
+QT = network core-private
 
 qtHaveModule(websockets): QT += websockets-private
 
