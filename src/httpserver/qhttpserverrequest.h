@@ -86,7 +86,7 @@ protected:
 
 private:
 #if !defined(QT_NO_DEBUG_STREAM)
-    friend QDebug operator<<(QDebug debug, const QHttpServerRequest &request);
+    friend Q_HTTPSERVER_EXPORT QDebug operator<<(QDebug debug, const QHttpServerRequest &request);
 #endif
 
     QHttpServerRequest();
