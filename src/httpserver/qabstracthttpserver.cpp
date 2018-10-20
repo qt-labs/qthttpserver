@@ -221,15 +221,7 @@ void QAbstractHttpServer::bind(QTcpServer *server)
  */
 QVector<QTcpServer *> QAbstractHttpServer::servers() const
 {
-    auto c = children();
-    QVector<QTcpServer *> result;
-    result.reserve(c.size());
-    for (auto i = c.constBegin(); i != c.constEnd(); ++i) {
-        if ((*i)->inherits("QTcpServer"))
-            result.append(static_cast<QTcpServer*>(*i));
-    }
-    result.squeeze();
-    return result;
+    return findChildren<QTcpServer *>().toVector();
 }
 
 #if defined(QT_WEBSOCKETS_LIB)

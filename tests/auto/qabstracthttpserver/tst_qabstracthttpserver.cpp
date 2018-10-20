@@ -68,6 +68,7 @@ private slots:
     void request();
     void checkListenWarns();
     void websocket();
+    void servers();
 };
 
 void tst_QAbstractHttpServer::request_data()
@@ -151,6 +152,23 @@ void tst_QAbstractHttpServer::websocket()
     QSignalSpy newConnectionSpy(&server, &HttpServer::newWebSocketConnection);
     QTRY_COMPARE(newConnectionSpy.count(), 1);
     delete server.nextPendingWebSocketConnection();
+}
+
+void tst_QAbstractHttpServer::servers()
+{
+    struct HttpServer : QAbstractHttpServer
+    {
+        bool handleRequest(const QHttpServerRequest &, QTcpSocket *) override { return true; }
+    } server;
+    auto tcpServer = new QTcpServer;
+    tcpServer->listen();
+    server.bind(tcpServer);
+    auto tcpServer2 = new QTcpServer;
+    tcpServer2->listen();
+    server.bind(tcpServer2);
+    QTRY_COMPARE(server.servers().count(), 2);
+    QTRY_COMPARE(server.servers().first(), tcpServer);
+    QTRY_COMPARE(server.servers().last(), tcpServer2);
 }
 
 QT_END_NAMESPACE
