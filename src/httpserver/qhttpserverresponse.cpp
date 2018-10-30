@@ -37,68 +37,84 @@
 **
 ****************************************************************************/
 
-#ifndef QHTTPSERVERREQUEST_H
-#define QHTTPSERVERREQUEST_H
+#include <QtHttpServer/qhttpserverresponse.h>
 
-#include <QtHttpServer/qthttpserverglobal.h>
+#include <private/qhttpserverresponse_p.h>
 
-#include <QtCore/qdebug.h>
-#include <QtCore/qglobal.h>
-#include <QtCore/qshareddata.h>
-#include <QtCore/qurl.h>
-#include <QtCore/qurlquery.h>
+#include <QtCore/qjsondocument.h>
+#include <QtCore/qjsonobject.h>
 
 QT_BEGIN_NAMESPACE
 
-class QRegularExpression;
-class QString;
-class QTcpSocket;
+namespace {
 
-class QHttpServerRequestPrivate;
-class Q_HTTPSERVER_EXPORT QHttpServerRequest : public QObjectUserData
+const QByteArray mimeTextHtml("text/html");
+const QByteArray mimeApplicationJson("application/json");
+
+}
+
+QHttpServerResponse::QHttpServerResponse(QHttpServerResponse &&other)
+    : d_ptr(other.d_ptr.take())
 {
-    friend class QAbstractHttpServerPrivate;
-    friend class QHttpServerResponse;
+}
 
-    Q_GADGET
+QHttpServerResponse::QHttpServerResponse(const QHttpServerResponse::StatusCode statusCode)
+    : QHttpServerResponse(mimeTextHtml, QByteArray(), statusCode)
+{
+}
 
-public:
-    ~QHttpServerRequest() override;
+QHttpServerResponse::QHttpServerResponse(const char *data)
+    : QHttpServerResponse(mimeTextHtml, QByteArray(data))
+{
+}
 
-    enum class Method
-    {
-        Unknown = 0x0000,
-        Get     = 0x0001,
-        Put     = 0x0002,
-        Delete  = 0x0004,
-        Post    = 0x0008,
-        Head    = 0x0010,
-        Options = 0x0020,
-        Patch   = 0x0040
-    };
-    Q_DECLARE_FLAGS(Methods, Method);
-    Q_FLAG(Methods)
+QHttpServerResponse::QHttpServerResponse(const QString &data)
+    : QHttpServerResponse(mimeTextHtml, data.toUtf8())
+{
+}
 
-    QString value(const QString &key) const;
-    QUrl url() const;
-    QUrlQuery query() const;
-    Method method() const;
-    QVariantMap headers() const;
-    QByteArray body() const;
+QHttpServerResponse::QHttpServerResponse(const QByteArray &data)
+    : QHttpServerResponse(mimeTextHtml, data)
+{
+}
 
-protected:
-    QHttpServerRequest(const QHttpServerRequest &other);
+QHttpServerResponse::QHttpServerResponse(const QJsonObject &data)
+    : QHttpServerResponse(mimeApplicationJson, QJsonDocument(data).toJson())
+{
+}
 
-private:
-#if !defined(QT_NO_DEBUG_STREAM)
-    friend Q_HTTPSERVER_EXPORT QDebug operator<<(QDebug debug, const QHttpServerRequest &request);
-#endif
+QHttpServerResponse::QHttpServerResponse(const QByteArray &mimeType,
+                                         const QByteArray &data,
+                                         const StatusCode status)
+    : QHttpServerResponse(new QHttpServerResponsePrivate{mimeType, data, status})
+{
+}
 
-    QHttpServerRequest();
+QHttpServerResponse::~QHttpServerResponse()
+{
+}
 
-    QExplicitlySharedDataPointer<QHttpServerRequestPrivate> d;
-};
+QHttpServerResponse::QHttpServerResponse(QHttpServerResponsePrivate *d)
+    : d_ptr(d)
+{
+}
+
+QByteArray QHttpServerResponse::data() const
+{
+    Q_D(const QHttpServerResponse);
+    return d->data;
+}
+
+QByteArray QHttpServerResponse::mimeType() const
+{
+    Q_D(const QHttpServerResponse);
+    return d->mimeType;
+}
+
+QHttpServerResponse::StatusCode QHttpServerResponse::statusCode() const
+{
+    Q_D(const QHttpServerResponse);
+    return d->statusCode;
+}
 
 QT_END_NAMESPACE
-
-#endif // QHTTPSERVERREQUEST_H

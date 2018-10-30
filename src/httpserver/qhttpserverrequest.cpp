@@ -267,6 +267,11 @@ QUrl QHttpServerRequest::url() const
     return d->url;
 }
 
+QUrlQuery QHttpServerRequest::query() const
+{
+    return QUrlQuery(d->url.query());
+}
+
 QHttpServerRequest::Method QHttpServerRequest::method() const
 {
     switch (d->httpParser.method) {

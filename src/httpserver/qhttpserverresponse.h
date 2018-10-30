@@ -37,68 +37,53 @@
 **
 ****************************************************************************/
 
-#ifndef QHTTPSERVERREQUEST_H
-#define QHTTPSERVERREQUEST_H
+#ifndef QHTTPSERVERRESPONSE_H
+#define QHTTPSERVERRESPONSE_H
 
-#include <QtHttpServer/qthttpserverglobal.h>
+#include <QtHttpServer/qhttpserverresponder.h>
 
-#include <QtCore/qdebug.h>
-#include <QtCore/qglobal.h>
-#include <QtCore/qshareddata.h>
-#include <QtCore/qurl.h>
-#include <QtCore/qurlquery.h>
+#include <QtCore/qscopedpointer.h>
 
 QT_BEGIN_NAMESPACE
 
-class QRegularExpression;
-class QString;
-class QTcpSocket;
+class QJsonObject;
 
-class QHttpServerRequestPrivate;
-class Q_HTTPSERVER_EXPORT QHttpServerRequest : public QObjectUserData
+class QHttpServerResponsePrivate;
+class Q_HTTPSERVER_EXPORT QHttpServerResponse
 {
-    friend class QAbstractHttpServerPrivate;
-    friend class QHttpServerResponse;
-
-    Q_GADGET
+    Q_DECLARE_PRIVATE(QHttpServerResponse)
 
 public:
-    ~QHttpServerRequest() override;
+    using StatusCode = QHttpServerResponder::StatusCode;
 
-    enum class Method
-    {
-        Unknown = 0x0000,
-        Get     = 0x0001,
-        Put     = 0x0002,
-        Delete  = 0x0004,
-        Post    = 0x0008,
-        Head    = 0x0010,
-        Options = 0x0020,
-        Patch   = 0x0040
-    };
-    Q_DECLARE_FLAGS(Methods, Method);
-    Q_FLAG(Methods)
+    QHttpServerResponse() = delete;
+    QHttpServerResponse(const QHttpServerResponse &other) = delete;
+    QHttpServerResponse& operator=(const QHttpServerResponse &other) = delete;
 
-    QString value(const QString &key) const;
-    QUrl url() const;
-    QUrlQuery query() const;
-    Method method() const;
-    QVariantMap headers() const;
-    QByteArray body() const;
+    QHttpServerResponse(QHttpServerResponse &&other);
+    QHttpServerResponse& operator=(QHttpServerResponse &&other) = delete;
 
-protected:
-    QHttpServerRequest(const QHttpServerRequest &other);
+    QHttpServerResponse(const StatusCode statusCode);
+    QHttpServerResponse(const char *data);
+    QHttpServerResponse(const QString &data);
+    explicit QHttpServerResponse(const QByteArray &data);
+    QHttpServerResponse(const QJsonObject &data);
+    QHttpServerResponse(const QByteArray &mimeType,
+                        const QByteArray &data,
+                        const StatusCode status = StatusCode::Ok);
+    virtual ~QHttpServerResponse();
 
+    QByteArray data() const;
+
+    QByteArray mimeType() const;
+
+    StatusCode statusCode() const;
 private:
-#if !defined(QT_NO_DEBUG_STREAM)
-    friend Q_HTTPSERVER_EXPORT QDebug operator<<(QDebug debug, const QHttpServerRequest &request);
-#endif
+    QHttpServerResponse(QHttpServerResponsePrivate *d);
 
-    QHttpServerRequest();
-
-    QExplicitlySharedDataPointer<QHttpServerRequestPrivate> d;
+    QScopedPointer<QHttpServerResponsePrivate> d_ptr;
 };
 
 QT_END_NAMESPACE
 
-#endif // QHTTPSERVERREQUEST_H
+#endif   // QHTTPSERVERRESPONSE_H

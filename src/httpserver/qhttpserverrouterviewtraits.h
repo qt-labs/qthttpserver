@@ -75,6 +75,82 @@ struct QHttpServerRouterViewTraits<Ret(ClassType::*)(Args...) const>
     };
 
 private:
+    // Tools used to check position of special arguments (QHttpServerResponder, QHttpServerRequest)
+    // and unsupported types
+    template<bool Last, typename Arg>
+    static constexpr bool checkArgument() noexcept
+    {
+            static_assert(Last || !std::is_same<Arg, const QHttpServerRequest &>::value,
+                          "ViewHandler arguments error: "
+                          "QHttpServerRequest can only be the last argument");
+            static_assert(Last || !std::is_same<Arg, QHttpServerResponder &&>::value,
+                          "ViewHandler arguments error: "
+                          "QHttpServerResponder can only be the last argument");
+
+            static_assert(!std::is_same<Arg, QHttpServerRequest &&>::value,
+                          "ViewHandler arguments error: "
+                          "QHttpServerRequest can only be passed as a const reference");
+            static_assert(!std::is_same<Arg, QHttpServerRequest &>::value,
+                          "ViewHandler arguments error: "
+                          "QHttpServerRequest can only be passed as a const reference");
+            static_assert(!std::is_same<Arg, const QHttpServerRequest *>::value,
+                          "ViewHandler arguments error: "
+                          "QHttpServerRequest can only be passed as a const reference");
+            static_assert(!std::is_same<Arg, QHttpServerRequest const*>::value,
+                          "ViewHandler arguments error: "
+                          "QHttpServerRequest can only be passed as a const reference");
+            static_assert(!std::is_same<Arg, QHttpServerRequest *>::value,
+                          "ViewHandler arguments error: "
+                          "QHttpServerRequest can only be passed as a const reference");
+
+            static_assert(!std::is_same<Arg, QHttpServerResponder &>::value,
+                          "ViewHandler arguments error: "
+                          "QHttpServerResponder can only be passed as a universal reference");
+            static_assert(!std::is_same<Arg, const QHttpServerResponder *const>::value,
+                          "ViewHandler arguments error: "
+                          "QHttpServerResponder can only be passed as a universal reference");
+            static_assert(!std::is_same<Arg, const QHttpServerResponder *>::value,
+                          "ViewHandler arguments error: "
+                          "QHttpServerResponder can only be passed as a universal reference");
+            static_assert(!std::is_same<Arg, QHttpServerResponder const*>::value,
+                          "ViewHandler arguments error: "
+                          "QHttpServerResponder can only be passed as a universal reference");
+            static_assert(!std::is_same<Arg, QHttpServerResponder *>::value,
+                          "ViewHandler arguments error: "
+                          "QHttpServerResponder can only be passed as a universal reference");
+
+            using Type = typename std::remove_cv<typename std::remove_reference<Arg>::type>::type;
+
+            static_assert(QMetaTypeId2<Type>::Defined
+                          || std::is_same<Type, QHttpServerResponder>::value
+                          || std::is_same<Type, QHttpServerRequest>::value,
+                          "ViewHandler arguments error: "
+                          "Type is not registered, please use the Q_DECLARE_METATYPE macro "
+                          "to make it known to Qt's meta-object system");
+
+            return true;
+    }
+
+public:
+    template<typename Arg, typename ... ArgX>
+    struct ArgumentsCheck {
+        static constexpr bool compileCheck()
+        {
+            return checkArgument<false, Arg>() && ArgumentsCheck<ArgX...>::compileCheck();
+        }
+    };
+
+    template<typename Arg>
+    struct ArgumentsCheck<Arg> {
+        static constexpr bool compileCheck()
+        {
+            return checkArgument<true, Arg>();
+        }
+    };
+
+    using Arguments = ArgumentsCheck<Args...>;
+
+private:
     // Tools used to compute ArgumentCapturableCount
     template<typename T>
     static constexpr typename std::enable_if<QMetaTypeId2<T>::Defined, int>::type
@@ -113,6 +189,14 @@ public:
     // BindableType is an emulation of "auto" for QHttpServerRouter::bindCapture.
     using BindableType = typename decltype(
             bindTypeHelper(typename QtPrivate::Indexes<ArgumentPlaceholdersCount>::Value{}))::Type;
+
+    static constexpr bool IsLastArgRequest = std::is_same<
+        typename Arg<ArgumentCount - 1>::Type, QHttpServerRequest>::value;
+
+    static constexpr bool IsLastArgResponder = std::is_same<
+        typename Arg<ArgumentCount - 1>::Type, QHttpServerResponder&&>::value;
+
+    static constexpr bool IsLastArgNonSpecial = !(IsLastArgRequest || IsLastArgResponder);
 };
 
 template <typename ClassType, typename Ret>
@@ -129,6 +213,16 @@ struct QHttpServerRouterViewTraits<Ret(ClassType::*)() const>
     static constexpr const auto ArgumentPlaceholdersCount = 0;
 
     using BindableType = decltype(std::function<Ret()>{});
+
+    static constexpr bool IsLastArgRequest = false;
+    static constexpr bool IsLastArgResponder = false;
+    static constexpr bool IsLastArgNonSpecial = true;
+
+    struct ArgumentsCheck {
+        static constexpr bool compileCheck() { return true; }
+    };
+
+    using Arguments = ArgumentsCheck;
 };
 
 QT_END_NAMESPACE

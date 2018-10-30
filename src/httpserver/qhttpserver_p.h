@@ -37,68 +37,36 @@
 **
 ****************************************************************************/
 
-#ifndef QHTTPSERVERREQUEST_H
-#define QHTTPSERVERREQUEST_H
+#ifndef QHTTPSERVER_P_H
+#define QHTTPSERVER_P_H
 
-#include <QtHttpServer/qthttpserverglobal.h>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists for the convenience
+// of QHttpServer. This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
 
-#include <QtCore/qdebug.h>
-#include <QtCore/qglobal.h>
-#include <QtCore/qshareddata.h>
-#include <QtCore/qurl.h>
-#include <QtCore/qurlquery.h>
+#include <private/qabstracthttpserver_p.h>
 
-QT_BEGIN_NAMESPACE
+#include <QtHttpServer/qhttpserver.h>
+#include <QtHttpServer/qhttpserverresponse.h>
+#include <QtHttpServer/qhttpserverrequest.h>
+#include <QtHttpServer/qhttpserverrouter.h>
 
-class QRegularExpression;
-class QString;
-class QTcpSocket;
+#include <QtCore/qmap.h>
 
-class QHttpServerRequestPrivate;
-class Q_HTTPSERVER_EXPORT QHttpServerRequest : public QObjectUserData
+class QHttpServerPrivate: public QAbstractHttpServerPrivate
 {
-    friend class QAbstractHttpServerPrivate;
-    friend class QHttpServerResponse;
-
-    Q_GADGET
+    Q_DECLARE_PUBLIC(QHttpServer)
 
 public:
-    ~QHttpServerRequest() override;
+    QHttpServerPrivate() = default;
 
-    enum class Method
-    {
-        Unknown = 0x0000,
-        Get     = 0x0001,
-        Put     = 0x0002,
-        Delete  = 0x0004,
-        Post    = 0x0008,
-        Head    = 0x0010,
-        Options = 0x0020,
-        Patch   = 0x0040
-    };
-    Q_DECLARE_FLAGS(Methods, Method);
-    Q_FLAG(Methods)
-
-    QString value(const QString &key) const;
-    QUrl url() const;
-    QUrlQuery query() const;
-    Method method() const;
-    QVariantMap headers() const;
-    QByteArray body() const;
-
-protected:
-    QHttpServerRequest(const QHttpServerRequest &other);
-
-private:
-#if !defined(QT_NO_DEBUG_STREAM)
-    friend Q_HTTPSERVER_EXPORT QDebug operator<<(QDebug debug, const QHttpServerRequest &request);
-#endif
-
-    QHttpServerRequest();
-
-    QExplicitlySharedDataPointer<QHttpServerRequestPrivate> d;
+    QHttpServerRouter router;
 };
 
-QT_END_NAMESPACE
-
-#endif // QHTTPSERVERREQUEST_H
+#endif // QHTTPSERVER_P_H
