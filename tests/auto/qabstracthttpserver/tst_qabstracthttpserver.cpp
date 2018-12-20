@@ -138,7 +138,7 @@ void tst_QAbstractHttpServer::websocket()
 {
 #if !defined(QT_WEBSOCKETS_LIB)
     QSKIP("This test requires WebSocket support");
-#endif // defined(QT_WEBSOCKETS_LIB)
+#else
     struct HttpServer : QAbstractHttpServer
     {
         bool handleRequest(const QHttpServerRequest &, QTcpSocket *) override { return false; }
@@ -152,6 +152,7 @@ void tst_QAbstractHttpServer::websocket()
     QSignalSpy newConnectionSpy(&server, &HttpServer::newWebSocketConnection);
     QTRY_COMPARE(newConnectionSpy.count(), 1);
     delete server.nextPendingWebSocketConnection();
+#endif // defined(QT_WEBSOCKETS_LIB)
 }
 
 void tst_QAbstractHttpServer::servers()
