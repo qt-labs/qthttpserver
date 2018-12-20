@@ -21,12 +21,6 @@
 /doc/qmake
 /doc/qt*/*
 
-/examples/*/*/*
-!/examples/*/*/*[.]*
-!/examples/*/*/README
-!/examples/*/doc/*
-!/examples/*/doc/*/*
-
 /translations/*.qm
 /translations/*_en.ts
 /translations/*_untranslated.ts
