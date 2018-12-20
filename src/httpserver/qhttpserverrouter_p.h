@@ -37,66 +37,38 @@
 **
 ****************************************************************************/
 
-#ifndef QHTTPSERVERREQUEST_H
-#define QHTTPSERVERREQUEST_H
+#ifndef QHTTPSERVERROUTER_P_H
+#define QHTTPSERVERROUTER_P_H
 
-#include <QtHttpServer/qthttpserverglobal.h>
+#include <QtHttpServer/qhttpserverrouter.h>
+#include <QtHttpServer/qhttpserverrouterrule.h>
 
-#include <QtCore/qdebug.h>
-#include <QtCore/qglobal.h>
-#include <QtCore/qshareddata.h>
-#include <QtCore/qurl.h>
+#include <QtCore/qmap.h>
+#include <QtCore/qlist.h>
+#include <QtCore/qstring.h>
+
+#include <memory>
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists for the convenience
+// of QHttpServer. This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
 
 QT_BEGIN_NAMESPACE
 
-class QRegularExpression;
-class QString;
-class QTcpSocket;
-
-class QHttpServerRequestPrivate;
-class Q_HTTPSERVER_EXPORT QHttpServerRequest : public QObjectUserData
+struct QHttpServerRouterPrivate
 {
-    friend class QAbstractHttpServerPrivate;
-    friend class QHttpServerResponse;
+    QHttpServerRouterPrivate();
 
-    Q_GADGET
-
-public:
-    ~QHttpServerRequest() override;
-
-    enum class Method
-    {
-        Unknown = 0x0000,
-        Get     = 0x0001,
-        Put     = 0x0002,
-        Delete  = 0x0004,
-        Post    = 0x0008,
-        Head    = 0x0010,
-        Options = 0x0020,
-        Patch   = 0x0040
-    };
-    Q_DECLARE_FLAGS(Methods, Method);
-    Q_FLAG(Methods)
-
-    QString value(const QString &key) const;
-    QUrl url() const;
-    Method method() const;
-    QVariantMap headers() const;
-    QByteArray body() const;
-
-protected:
-    QHttpServerRequest(const QHttpServerRequest &other);
-
-private:
-#if !defined(QT_NO_DEBUG_STREAM)
-    friend Q_HTTPSERVER_EXPORT QDebug operator<<(QDebug debug, const QHttpServerRequest &request);
-#endif
-
-    QHttpServerRequest();
-
-    QExplicitlySharedDataPointer<QHttpServerRequestPrivate> d;
+    QMap<int, QLatin1String> converters;
+    std::list<std::unique_ptr<QHttpServerRouterRule>> rules;
 };
 
 QT_END_NAMESPACE
 
-#endif // QHTTPSERVERREQUEST_H
+#endif // QHTTPSERVERROUTER_P_H

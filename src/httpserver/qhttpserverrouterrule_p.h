@@ -37,66 +37,35 @@
 **
 ****************************************************************************/
 
-#ifndef QHTTPSERVERREQUEST_H
-#define QHTTPSERVERREQUEST_H
+#ifndef QHTTPSERVERROUTERRULE_P_H
+#define QHTTPSERVERROUTERRULE_P_H
 
-#include <QtHttpServer/qthttpserverglobal.h>
+#include <QtHttpServer/qhttpserverrouterrule.h>
 
-#include <QtCore/qdebug.h>
-#include <QtCore/qglobal.h>
-#include <QtCore/qshareddata.h>
-#include <QtCore/qurl.h>
+#include <QtCore/qregularexpression.h>
+#include <QtCore/qstring.h>
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists for the convenience
+// of QHttpServer. This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
 
 QT_BEGIN_NAMESPACE
 
-class QRegularExpression;
-class QString;
-class QTcpSocket;
-
-class QHttpServerRequestPrivate;
-class Q_HTTPSERVER_EXPORT QHttpServerRequest : public QObjectUserData
+struct Q_HTTPSERVER_EXPORT QHttpServerRouterRulePrivate
 {
-    friend class QAbstractHttpServerPrivate;
-    friend class QHttpServerResponse;
+    QString pathPattern;
+    QHttpServerRequest::Methods methods;
+    QHttpServerRouterRule::RouterHandler routerHandler;
 
-    Q_GADGET
-
-public:
-    ~QHttpServerRequest() override;
-
-    enum class Method
-    {
-        Unknown = 0x0000,
-        Get     = 0x0001,
-        Put     = 0x0002,
-        Delete  = 0x0004,
-        Post    = 0x0008,
-        Head    = 0x0010,
-        Options = 0x0020,
-        Patch   = 0x0040
-    };
-    Q_DECLARE_FLAGS(Methods, Method);
-    Q_FLAG(Methods)
-
-    QString value(const QString &key) const;
-    QUrl url() const;
-    Method method() const;
-    QVariantMap headers() const;
-    QByteArray body() const;
-
-protected:
-    QHttpServerRequest(const QHttpServerRequest &other);
-
-private:
-#if !defined(QT_NO_DEBUG_STREAM)
-    friend Q_HTTPSERVER_EXPORT QDebug operator<<(QDebug debug, const QHttpServerRequest &request);
-#endif
-
-    QHttpServerRequest();
-
-    QExplicitlySharedDataPointer<QHttpServerRequestPrivate> d;
+    QRegularExpression pathRegexp;
 };
 
 QT_END_NAMESPACE
 
-#endif // QHTTPSERVERREQUEST_H
+#endif // QHTTPSERVERROUTERRULE_P_H

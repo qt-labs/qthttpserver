@@ -9,15 +9,23 @@ HEADERS += \
     qthttpserverglobal.h \
     qabstracthttpserver.h \
     qabstracthttpserver_p.h \
+    qhttpserverhelpers.h \
+    qhttpserverrequest.h \
+    qhttpserverrequest_p.h \
     qhttpserverresponder.h \
     qhttpserverresponder_p.h \
-    qhttpserverrequest.h \
-    qhttpserverrequest_p.h
+    qhttpserverrouter.h \
+    qhttpserverrouter_p.h \
+    qhttpserverrouterrule.h \
+    qhttpserverrouterrule_p.h \
+    qhttpserverrouterviewtraits.h
 
 SOURCES += \
     qabstracthttpserver.cpp \
+    qhttpserverrequest.cpp \
     qhttpserverresponder.cpp \
-    qhttpserverrequest.cpp
+    qhttpserverrouter.cpp \
+    qhttpserverrouterrule.cpp
 
 include(../3rdparty/http-parser.pri)
 

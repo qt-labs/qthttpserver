@@ -37,66 +37,59 @@
 **
 ****************************************************************************/
 
-#ifndef QHTTPSERVERREQUEST_H
-#define QHTTPSERVERREQUEST_H
+#ifndef QHTTPSERVERROUTERRULE_H
+#define QHTTPSERVERROUTERRULE_H
 
-#include <QtHttpServer/qthttpserverglobal.h>
+#include <QtHttpServer/qhttpserverrequest.h>
 
-#include <QtCore/qdebug.h>
-#include <QtCore/qglobal.h>
-#include <QtCore/qshareddata.h>
-#include <QtCore/qurl.h>
+#include <QtCore/qmap.h>
 
 QT_BEGIN_NAMESPACE
 
-class QRegularExpression;
 class QString;
+class QHttpServerRequest;
 class QTcpSocket;
+class QRegularExpressionMatch;
+class QHttpServerRouter;
 
-class QHttpServerRequestPrivate;
-class Q_HTTPSERVER_EXPORT QHttpServerRequest : public QObjectUserData
+class QHttpServerRouterRulePrivate;
+class Q_HTTPSERVER_EXPORT QHttpServerRouterRule
 {
-    friend class QAbstractHttpServerPrivate;
-    friend class QHttpServerResponse;
-
-    Q_GADGET
+    Q_DECLARE_PRIVATE(QHttpServerRouterRule)
 
 public:
-    ~QHttpServerRequest() override;
+    using RouterHandler = std::function<void(QRegularExpressionMatch &,
+                                             const QHttpServerRequest &,
+                                             QTcpSocket *)>;
 
-    enum class Method
-    {
-        Unknown = 0x0000,
-        Get     = 0x0001,
-        Put     = 0x0002,
-        Delete  = 0x0004,
-        Post    = 0x0008,
-        Head    = 0x0010,
-        Options = 0x0020,
-        Patch   = 0x0040
-    };
-    Q_DECLARE_FLAGS(Methods, Method);
-    Q_FLAG(Methods)
+    explicit QHttpServerRouterRule(const QString &pathPattern, RouterHandler &&routerHandler);
+    explicit QHttpServerRouterRule(const QString &pathPattern,
+                                   const QHttpServerRequest::Methods methods,
+                                   RouterHandler &&routerHandler);
 
-    QString value(const QString &key) const;
-    QUrl url() const;
-    Method method() const;
-    QVariantMap headers() const;
-    QByteArray body() const;
+    QHttpServerRouterRule(QHttpServerRouterRule &&other) = delete;
+    QHttpServerRouterRule &operator=(QHttpServerRouterRule &&other) = delete;
+
+    virtual ~QHttpServerRouterRule();
 
 protected:
-    QHttpServerRequest(const QHttpServerRequest &other);
+    bool exec(const QHttpServerRequest &request, QTcpSocket *socket) const;
+
+    bool createPathRegexp(const std::initializer_list<int> &metaTypes,
+                          const QMap<int, QLatin1String> &converters);
+
+    virtual bool matches(const QHttpServerRequest &request,
+                         QRegularExpressionMatch *match) const;
+
+    QHttpServerRouterRule(QHttpServerRouterRulePrivate *d);
 
 private:
-#if !defined(QT_NO_DEBUG_STREAM)
-    friend Q_HTTPSERVER_EXPORT QDebug operator<<(QDebug debug, const QHttpServerRequest &request);
-#endif
+    Q_DISABLE_COPY(QHttpServerRouterRule);
+    QScopedPointer<QHttpServerRouterRulePrivate> d_ptr;
 
-    QHttpServerRequest();
-
-    QExplicitlySharedDataPointer<QHttpServerRequestPrivate> d;
+    friend class QHttpServerRouter;
 };
 
 QT_END_NAMESPACE
 
-#endif // QHTTPSERVERREQUEST_H
+#endif // QHTTPSERVERROUTERRULE_H
