@@ -95,7 +95,7 @@ void tst_QAbstractHttpServer::request()
     {
         QUrl url;
         QByteArray body;
-        QHttpServerRequest::Method method;
+        QHttpServerRequest::Method method = QHttpServerRequest::Method::Unknown;
         quint8 padding[4];
 
         bool handleRequest(const QHttpServerRequest &request, QTcpSocket *) override
@@ -107,7 +107,7 @@ void tst_QAbstractHttpServer::request()
         }
     } server;
     auto tcpServer = new QTcpServer;
-    tcpServer->listen();
+    QVERIFY(tcpServer->listen());
     server.bind(tcpServer);
     QNetworkAccessManager networkAccessManager;
     QUrl url(QStringLiteral("http://%1:%2%3")
