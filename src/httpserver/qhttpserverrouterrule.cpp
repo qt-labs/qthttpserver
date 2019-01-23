@@ -175,10 +175,19 @@ bool QHttpServerRouterRule::createPathRegexp(const std::initializer_list<int> &m
     QString pathRegexp = d->pathPattern;
     const QLatin1String arg("<arg>");
     for (auto type : metaTypes) {
+        if (type >= QMetaType::User
+            && !QMetaType::hasRegisteredConverterFunction(qMetaTypeId<QString>(), type)) {
+            qCWarning(lcRouterRule) << QMetaType::typeName(type)
+                                    << "has not registered a converter to QString."
+                                    << "Use QHttpServerRouter::addConveter<Type>(converter).";
+            return false;
+        }
+
         auto it = converters.constFind(type);
         if (it == converters.end()) {
-            qCWarning(lcRouterRule) << "can not find converter for type:" << type;
-            continue;
+            qCWarning(lcRouterRule) << "can not find converter for type:"
+                                    << QMetaType::typeName(type);
+            return false;
         }
 
         if (it->isEmpty())

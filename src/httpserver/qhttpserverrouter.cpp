@@ -97,6 +97,44 @@ static const QMap<int, QLatin1String> defaultConverters = {
     \endcode
 */
 
+/*! \fn template <typename Type> bool QHttpServerRouter::addConverter(const QLatin1String &regexp)
+
+    Adds a new converter for type \e Type matching regular expression \a regexp.
+
+    Automatically try to register an implicit converter from QString to \e Type.
+    If there is already a converter of type \e Type, that converter's regexp
+    is replaced with \a regexp.
+
+    \code
+    struct CustomArg {
+        int data = 10;
+
+        CustomArg() {} ;
+        CustomArg(const QString &urlArg) : data(urlArg.toInt()) {}
+    };
+    Q_DECLARE_METATYPE(CustomArg);
+
+    QHttpServerRouter router;
+    router.addConverter<CustomArg>(QLatin1String("[+-]?\\d+"));
+
+    auto pageView = [] (const CustomArg &customArg) {
+        qDebug("data: %d", customArg.data);
+    };
+    using ViewHandler = decltype(pageView);
+
+    auto rule = new QHttpServerRouterRule(
+        "/<arg>/<arg>/log",
+        [&router, &pageView] (QRegularExpressionMatch &match,
+                              const QHttpServerRequest &request,
+                              QTcpSocket *socket) {
+        // Bind and call viewHandler with match's captured string and quint32:
+        router.bindCaptured(pageView, match)();
+    });
+
+    router.addRule<ViewHandler>(rule);
+    \endcode
+*/
+
 /*! \fn template <typename ViewHandler, typename ViewTraits = QHttpServerRouterViewTraits<ViewHandler>> bool QHttpServerRouter::addRule(QHttpServerRouterRule *rule)
 
     Adds a new \a rule.
@@ -134,14 +172,16 @@ static const QMap<int, QLatin1String> defaultConverters = {
     \code
     QHttpServerRouter router;
 
-    auto pageView = [] (const QString &page, const quint32 num) { };
+    auto pageView = [] (const QString &page, const quint32 num) {
+        qDebug("page: %s, num: %d", qPrintable(page), num);
+    };
     using ViewHandler = decltype(pageView);
 
     auto rule = new QHttpServerRouterRule(
         "/<arg>/<arg>/log",
-        [&router] (QRegularExpressionMatch &match,
-                   const QHttpServerRequest &request,
-                   QTcpSocket *socket) {
+        [&router, &pageView] (QRegularExpressionMatch &match,
+                              const QHttpServerRequest &request,
+                              QTcpSocket *socket) {
         // Bind and call viewHandler with match's captured string and quint32:
         router.bindCaptured(pageView, match)();
     });

@@ -72,6 +72,19 @@ public:
     QHttpServerRouter();
     ~QHttpServerRouter();
 
+    template<typename Type>
+    bool addConverter(const QLatin1String &regexp) {
+        static_assert(QMetaTypeId2<Type>::Defined,
+                      "Type is not registered with Qt's meta-object system: "
+                      "please apply Q_DECLARE_METATYPE() to it");
+
+        if (!QMetaType::registerConverter<QString, Type>())
+            return false;
+
+        addConverter(qMetaTypeId<Type>(), regexp);
+        return true;
+    }
+
     void addConverter(const int type, const QLatin1String &regexp);
     void removeConverter(const int);
     void clearConverters();

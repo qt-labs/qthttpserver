@@ -40,6 +40,7 @@
 #include <QtCore/qstring.h>
 #include <QtCore/qlist.h>
 #include <QtCore/qbytearray.h>
+#include <QtCore/qdatetime.h>
 
 #include <QtNetwork/qnetworkaccessmanager.h>
 #include <QtNetwork/qnetworkreply.h>
@@ -84,10 +85,18 @@ private slots:
     void routeGet();
     void routePost_data();
     void routePost();
+    void invalidRouterArguments();
 
 private:
     QHttpServer httpserver;
     QString urlBase;
+};
+
+struct CustomArg {
+    int data = 10;
+
+    CustomArg() {} ;
+    CustomArg(const QString &urlArg) : data(urlArg.toInt()) {}
 };
 
 void tst_QHttpServer::initTestCase()
@@ -151,6 +160,12 @@ void tst_QHttpServer::initTestCase()
     });
 
     urlBase = QStringLiteral("http://localhost:%1%2").arg(httpserver.listen());
+
+
+    httpserver.router()->addConverter<CustomArg>(QLatin1String("[+-]?\\d+"));
+    httpserver.route("/check-custom-type/", [] (const CustomArg &customArg) {
+        return QString("data = %1").arg(customArg.data);
+    });
 }
 
 void tst_QHttpServer::routeGet_data()
@@ -278,6 +293,13 @@ void tst_QHttpServer::routeGet_data()
         << 200
         << "text/html"
         << "Custom router rule: 10, key=12";
+
+    QTest::addRow("check custom type, data=1")
+        << "/check-custom-type/1"
+        << 200
+        << "text/html"
+        << "data = 1";
+
 }
 
 void tst_QHttpServer::routeGet()
@@ -333,7 +355,31 @@ void tst_QHttpServer::routePost()
     QCOMPARE(reply->readAll(), body);
 }
 
+struct CustomType {
+    CustomType() {}
+    CustomType(const QString &) {}
+};
+
+void tst_QHttpServer::invalidRouterArguments()
+{
+    QCOMPARE(
+        httpserver.route("/datetime/", [] (const QDateTime &datetime) {
+            return QString("datetime: %1").arg(datetime.toString());
+        }),
+        false);
+
+    QCOMPARE(
+        httpserver.route("/implicit-conversion-to-qstring-has-no-registered/",
+                         [] (const CustomType &) {
+            return "";
+        }),
+        false);
+}
+
 QT_END_NAMESPACE
+
+Q_DECLARE_METATYPE(CustomArg);
+Q_DECLARE_METATYPE(CustomType);
 
 QTEST_MAIN(tst_QHttpServer)
 
