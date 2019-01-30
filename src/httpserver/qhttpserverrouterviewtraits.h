@@ -41,7 +41,9 @@
 #define QHTTPSERVERROUTERVIEWTRAITS_H
 
 #include <QtCore/qglobal.h>
+#include <QtCore/qmetatype.h>
 #include <QtCore/qnamespace.h>
+#include <QtCore/qobjectdefs.h>
 
 #include <functional>
 #include <tuple>

@@ -84,7 +84,7 @@ protected:
     QHttpServerRouterRule(QHttpServerRouterRulePrivate *d);
 
 private:
-    Q_DISABLE_COPY(QHttpServerRouterRule);
+    Q_DISABLE_COPY(QHttpServerRouterRule)
     QScopedPointer<QHttpServerRouterRulePrivate> d_ptr;
 
     friend class QHttpServerRouter;

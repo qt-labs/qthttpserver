@@ -76,7 +76,7 @@ public:
         Options = 0x0020,
         Patch   = 0x0040
     };
-    Q_DECLARE_FLAGS(Methods, Method);
+    Q_DECLARE_FLAGS(Methods, Method)
     Q_FLAG(Methods)
 
     QString value(const QString &key) const;
