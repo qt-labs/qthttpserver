@@ -54,8 +54,9 @@
 
 #include <QtHttpServer/qhttpserverresponse.h>
 
-struct QHttpServerResponsePrivate
+class QHttpServerResponsePrivate
 {
+public:
     QByteArray mimeType;
     QByteArray data;
     QHttpServerResponse::StatusCode statusCode;

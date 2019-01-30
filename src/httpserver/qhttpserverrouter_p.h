@@ -61,8 +61,9 @@
 
 QT_BEGIN_NAMESPACE
 
-struct QHttpServerRouterPrivate
+class QHttpServerRouterPrivate
 {
+public:
     QHttpServerRouterPrivate();
 
     QMap<int, QLatin1String> converters;

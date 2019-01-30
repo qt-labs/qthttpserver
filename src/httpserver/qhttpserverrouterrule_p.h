@@ -57,8 +57,9 @@
 
 QT_BEGIN_NAMESPACE
 
-struct Q_HTTPSERVER_EXPORT QHttpServerRouterRulePrivate
+class Q_HTTPSERVER_EXPORT QHttpServerRouterRulePrivate
 {
+public:
     QString pathPattern;
     QHttpServerRequest::Methods methods;
     QHttpServerRouterRule::RouterHandler routerHandler;
