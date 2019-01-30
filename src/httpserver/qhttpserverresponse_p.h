@@ -44,6 +44,8 @@
 
 #include <QtHttpServer/qhttpserverresponse.h>
 
+QT_BEGIN_NAMESPACE
+
 class QHttpServerResponsePrivate
 {
 public:
@@ -51,5 +53,7 @@ public:
     QByteArray data;
     QHttpServerResponse::StatusCode statusCode;
 };
+
+QT_END_NAMESPACE
 
 #endif // QHTTPSERVERRESPONSE_P_H

@@ -3,6 +3,8 @@
 ** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
+** This file is part of the QtHttpServer module of the Qt Toolkit.
+**
 ** $QT_BEGIN_LICENSE:GPL$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
@@ -58,7 +60,8 @@ QAbstractHttpServerPrivate::QAbstractHttpServerPrivate()
 
 void QAbstractHttpServerPrivate::handleNewConnections()
 {
-    auto tcpServer = qobject_cast<QTcpServer *>(currentSender->sender);
+    Q_Q(QAbstractHttpServer);
+    auto tcpServer = qobject_cast<QTcpServer *>(q->sender());
     Q_ASSERT(tcpServer);
     while (auto *socket = tcpServer->nextPendingConnection()) {
         auto request = new QHttpServerRequest;  // TODO own tcp server could pre-allocate it
@@ -79,7 +82,7 @@ void QAbstractHttpServerPrivate::handleNewConnections()
 void QAbstractHttpServerPrivate::handleReadyRead()
 {
     Q_Q(QAbstractHttpServer);
-    auto socket = qobject_cast<QTcpSocket *>(currentSender->sender);
+    auto socket = qobject_cast<QTcpSocket *>(q->sender());
     Q_ASSERT(socket);
 #if !defined(QT_NO_USERDATA)
     auto request = static_cast<QHttpServerRequest *>(socket->userData(uint(userDataId)));

@@ -35,13 +35,6 @@
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qtimer.h>
 #include <QtNetwork/qtcpsocket.h>
-#if defined(QT_WEBSOCKETS_LIB)
-#include <QtWebSockets/qwebsocket.h>
-#include <private/qwebsocket_p.h>
-#include <private/qwebsockethandshakeresponse_p.h>
-#include <private/qwebsockethandshakerequest_p.h>
-#endif
-
 #include <map>
 #include <memory>
 

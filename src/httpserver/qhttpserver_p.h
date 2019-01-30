@@ -47,7 +47,9 @@
 #include <QtHttpServer/qhttpserverrequest.h>
 #include <QtHttpServer/qhttpserverrouter.h>
 
-#include <QtCore/qmap.h>
+#include <QtCore/qglobal.h>
+
+QT_BEGIN_NAMESPACE
 
 class QHttpServerPrivate: public QAbstractHttpServerPrivate
 {
@@ -58,5 +60,7 @@ public:
 
     QHttpServerRouter router;
 };
+
+QT_END_NAMESPACE
 
 #endif // QHTTPSERVER_P_H

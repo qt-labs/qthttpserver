@@ -3,6 +3,8 @@
 ** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
+** This file is part of the QtHttpServer module of the Qt Toolkit.
+**
 ** $QT_BEGIN_LICENSE:GPL$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
@@ -34,9 +36,9 @@
 #include <QtTest/qtest.h>
 #include <QtNetwork/qnetworkaccessmanager.h>
 
-QT_BEGIN_NAMESPACE
-
 Q_DECLARE_METATYPE(QNetworkAccessManager::Operation);
+
+QT_BEGIN_NAMESPACE
 
 struct HttpServer : QAbstractHttpServer {
     QHttpServerRouter router;

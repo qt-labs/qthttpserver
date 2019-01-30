@@ -3,6 +3,8 @@
 ** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
+** This file is part of the QtHttpServer module of the Qt Toolkit.
+**
 ** $QT_BEGIN_LICENSE:GPL$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
@@ -73,6 +75,8 @@ void tst_QAbstractHttpServer::request_data()
     QTest::addRow("localhost with query") << "localhost" << "/" << QString("key=value");
     QTest::addRow("0.0.0.0 path with spaces") << "0.0.0.0" << "/test test" << QString();
     QTest::addRow("0.0.0.0 path with spec spaces") << "0.0.0.0" << "/test%20test" << QString();
+    QTest::addRow("127.0.0.1 path with spaces") << "127.0.0.1" << "/test test" << QString();
+    QTest::addRow("127.0.0.1 path with spec spaces") << "127.0.0.1" << "/test%20test" << QString();
 }
 
 void tst_QAbstractHttpServer::request()
@@ -80,6 +84,11 @@ void tst_QAbstractHttpServer::request()
     QFETCH(QString, host);
     QFETCH(QString, path);
     QFETCH(QString, query);
+
+#if defined(Q_OS_WIN)
+    if (host == QLatin1String("0.0.0.0"))
+        QSKIP("Windows has problems with 0.0.0.0");
+#endif
 
     struct HttpServer : QAbstractHttpServer
     {

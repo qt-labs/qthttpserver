@@ -3,6 +3,8 @@
 ** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
+** This file is part of the QtHttpServer module of the Qt Toolkit.
+**
 ** $QT_BEGIN_LICENSE:GPL$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
@@ -29,6 +31,7 @@
 
 #include <private/qhttpserverrouterrule_p.h>
 
+#include <QtCore/qloggingcategory.h>
 #include <QtCore/qregularexpression.h>
 #include <QtCore/qdebug.h>
 
@@ -193,7 +196,7 @@ bool QHttpServerRouterRule::createPathRegexp(const std::initializer_list<int> &m
         qCWarning(lcRouterRule) << "not enough types or one of the types is not supported, regexp:"
                                 << pathRegexp
                                 << ", pattern:" << d->pathPattern
-                                << ", types:" << metaTypes;
+                                << ", types:" << std::list<int>(metaTypes);
         return false;
     }
 

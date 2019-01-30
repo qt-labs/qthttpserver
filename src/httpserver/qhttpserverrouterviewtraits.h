@@ -50,7 +50,7 @@ struct QHttpServerRouterViewTraits : QHttpServerRouterViewTraits<decltype(&ViewH
 template <typename ClassType, typename Ret, typename ... Args>
 struct QHttpServerRouterViewTraits<Ret(ClassType::*)(Args...) const>
 {
-    static constexpr const auto ArgumentCount = sizeof ... (Args);
+    static constexpr const int ArgumentCount = sizeof ... (Args);
 
     template <int I>
     struct Arg {
@@ -161,9 +161,10 @@ private:
     { return it + sum(n...); }
 
 public:
-    static constexpr const auto ArgumentCapturableCount =
+    static constexpr const std::size_t ArgumentCapturableCount =
         sum(capturable<typename QtPrivate::RemoveConstRef<Args>::Type>()...);
-    static constexpr const auto ArgumentPlaceholdersCount = ArgumentCount - ArgumentCapturableCount;
+    static constexpr const std::size_t ArgumentPlaceholdersCount = ArgumentCount
+            - ArgumentCapturableCount;
 
 private:
     // Tools used to get BindableType
@@ -173,14 +174,17 @@ private:
     };
 
     template<int ... Idx>
-    static constexpr auto bindTypeHelper(QtPrivate::IndexesList<Idx...>) ->
-        BindTypeHelper<Ret, typename Arg<ArgumentCapturableCount + Idx>::OriginalType...>;
+    static constexpr typename BindTypeHelper<
+                Ret, typename Arg<ArgumentCapturableCount + Idx>::OriginalType...>::Type
+            bindTypeHelper(QtPrivate::IndexesList<Idx...>)
+    {
+        return BindTypeHelper<Ret,
+                              typename Arg<ArgumentCapturableCount + Idx>::OriginalType...>::Type();
+    }
 
 public:
-    // C++11 does not allow use of "auto" as a function return type.
-    // BindableType is an emulation of "auto" for QHttpServerRouter::bindCapture.
-    using BindableType = typename decltype(
-            bindTypeHelper(typename QtPrivate::Indexes<ArgumentPlaceholdersCount>::Value{}))::Type;
+    using BindableType = decltype(bindTypeHelper(typename QtPrivate::Indexes<
+        ArgumentPlaceholdersCount>::Value{}));
 
     static constexpr bool IsLastArgRequest = std::is_same<
         typename Arg<ArgumentCount - 1>::Type, QHttpServerRequest>::value;
@@ -201,8 +205,8 @@ struct QHttpServerRouterViewTraits<Ret(ClassType::*)() const>
         using Type = void;
     };
 
-    static constexpr const auto ArgumentCapturableCount = 0;
-    static constexpr const auto ArgumentPlaceholdersCount = 0;
+    static constexpr const std::size_t ArgumentCapturableCount = 0u;
+    static constexpr const std::size_t ArgumentPlaceholdersCount = 0u;
 
     using BindableType = decltype(std::function<Ret()>{});
 

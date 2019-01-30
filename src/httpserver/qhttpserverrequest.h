@@ -34,7 +34,6 @@
 
 #include <QtCore/qdebug.h>
 #include <QtCore/qglobal.h>
-#include <QtCore/qshareddata.h>
 #include <QtCore/qurl.h>
 #include <QtCore/qurlquery.h>
 
@@ -66,6 +65,7 @@ public:
         Options = 0x0020,
         Patch   = 0x0040
     };
+    Q_ENUM(Method)
     Q_DECLARE_FLAGS(Methods, Method)
     Q_FLAG(Methods)
 
@@ -86,7 +86,7 @@ private:
 
     QHttpServerRequest();
 
-    QExplicitlySharedDataPointer<QHttpServerRequestPrivate> d;
+    QHttpServerRequestPrivate *d = nullptr;
 };
 
 QT_END_NAMESPACE

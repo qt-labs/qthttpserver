@@ -3,6 +3,8 @@
 ** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
+** This file is part of the QtHttpServer module of the Qt Toolkit.
+**
 ** $QT_BEGIN_LICENSE:GPL$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
@@ -157,19 +159,19 @@ void tst_QHttpServerResponder::writeFile_data()
         << qobject_cast<QIODevice *>(new QFile(QFINDTESTDATA("index.html"), this))
         << 200
         << "text/html"
-        << "<html>\n</html>\n";
+        << "<html></html>";
 
     QTest::addRow("index1.html - not found")
         << qobject_cast<QIODevice *>(new QFile("./index1.html", this))
         << 500
         << "application/x-empty"
-        << "";
+        << QString();
 
     QTest::addRow("temporary file")
         << qobject_cast<QIODevice *>(new QTemporaryFile(this))
         << 200
         << "text/html"
-        << "";
+        << QString();
 }
 
 void tst_QHttpServerResponder::writeFile()

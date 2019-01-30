@@ -36,13 +36,13 @@
 #include <QtCore/qglobal.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qscopedpointer.h>
+#include <QtCore/qmetatype.h>
 #include <QtCore/qmimetype.h>
 
 QT_BEGIN_NAMESPACE
 
 class QTcpSocket;
 class QHttpServerRequest;
-class QWebSocket;
 
 class QHttpServerResponderPrivate;
 class Q_HTTPSERVER_EXPORT QHttpServerResponder final
@@ -162,8 +162,8 @@ private:
     QScopedPointer<QHttpServerResponderPrivate> d_ptr;
 };
 
-Q_DECLARE_METATYPE(QHttpServerResponder::StatusCode)
-
 QT_END_NAMESPACE
+
+Q_DECLARE_METATYPE(QHttpServerResponder::StatusCode)
 
 #endif // QHTTPSERVERRESPONDER_H

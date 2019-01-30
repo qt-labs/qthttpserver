@@ -11,7 +11,6 @@ HEADERS += \
     qabstracthttpserver_p.h \
     qhttpserver.h \
     qhttpserver_p.h \
-    qhttpserverhelpers.h \
     qhttpserverrequest.h \
     qhttpserverrequest_p.h \
     qhttpserverresponder.h \

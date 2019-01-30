@@ -31,14 +31,31 @@
 #define QHTTPSERVERROUTER_H
 
 #include <QtHttpServer/qthttpserverglobal.h>
-#include <QtHttpServer/qhttpserverhelpers.h>
 #include <QtHttpServer/qhttpserverrouterviewtraits.h>
 
 #include <QtCore/qscopedpointer.h>
 #include <QtCore/qmetatype.h>
 #include <QtCore/qregularexpression.h>
 
+#include <functional>
 #include <initializer_list>
+
+QT_BEGIN_NAMESPACE
+
+namespace QtPrivate {
+    template<int> struct QHttpServerRouterPlaceholder {};
+}
+
+QT_END_NAMESPACE
+
+namespace std {
+
+template<int N>
+struct is_placeholder<QT_PREPEND_NAMESPACE(QtPrivate::QHttpServerRouterPlaceholder<N>)> :
+    integral_constant<int , N + 1>
+{};
+
+}
 
 QT_BEGIN_NAMESPACE
 
@@ -71,8 +88,8 @@ public:
     }
 
     template<typename ViewHandler, typename ViewTraits = QHttpServerRouterViewTraits<ViewHandler>>
-    auto bindCaptured(ViewHandler &&handler,
-                      QRegularExpressionMatch &match) const -> typename ViewTraits::BindableType
+    typename ViewTraits::BindableType bindCaptured(ViewHandler &&handler,
+                      QRegularExpressionMatch &match) const
     {
         return bindCapturedImpl<ViewHandler, ViewTraits>(
                 std::forward<ViewHandler>(handler),
@@ -97,16 +114,18 @@ private:
                      const std::initializer_list<int> &metaTypes);
 
     template<typename ViewHandler, typename ViewTraits, int ... Cx, int ... Px>
-    auto bindCapturedImpl(ViewHandler &&handler,
+    typename ViewTraits::BindableType bindCapturedImpl(ViewHandler &&handler,
                           QRegularExpressionMatch &match,
                           QtPrivate::IndexesList<Cx...>,
-                          QtPrivate::IndexesList<Px...>) const -> typename ViewTraits::BindableType
+                          QtPrivate::IndexesList<Px...>) const
     {
+
         return std::bind(
                 std::forward<ViewHandler>(handler),
                 QVariant(match.captured(Cx + 1)).value<typename ViewTraits::template Arg<Cx>::Type>()...,
-                QHttpServerHelpers::Placeholder<Px>{}...);
+                QtPrivate::QHttpServerRouterPlaceholder<Px>{}...);
     }
+
 
     QScopedPointer<QHttpServerRouterPrivate> d_ptr;
 };

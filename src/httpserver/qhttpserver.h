@@ -34,10 +34,14 @@
 #include <QtHttpServer/qhttpserverrouter.h>
 #include <QtHttpServer/qhttpserverrouterrule.h>
 #include <QtHttpServer/qhttpserverresponse.h>
+#include <QtHttpServer/qhttpserverrouterviewtraits.h>
 
 #include <tuple>
 
 QT_BEGIN_NAMESPACE
+
+class QTcpSocket;
+class QHttpServerRequest;
 
 class QHttpServerPrivate;
 class Q_HTTPSERVER_EXPORT QHttpServer final : public QAbstractHttpServer
@@ -122,7 +126,7 @@ private:
         boundViewHandler(makeResponder(request, socket));
     }
 
-    bool handleRequest(const QHttpServerRequest &request, QTcpSocket *socket) final;
+    bool handleRequest(const QHttpServerRequest &request, QTcpSocket *socket) override final;
 
     void sendResponse(const QHttpServerResponse &response,
                       const QHttpServerRequest &request,

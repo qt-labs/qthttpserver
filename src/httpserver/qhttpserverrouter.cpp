@@ -3,6 +3,8 @@
 ** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
+** This file is part of the QtHttpServer module of the Qt Toolkit.
+**
 ** $QT_BEGIN_LICENSE:GPL$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
@@ -33,15 +35,14 @@
 
 #include <private/qhttpserverrouterrule_p.h>
 
+#include <QtCore/qloggingcategory.h>
 #include <QtCore/qmetatype.h>
 
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcRouter, "qt.httpserver.router")
 
-namespace {
-
-const QMap<int, QLatin1String> defaultConverters = {
+static const QMap<int, QLatin1String> defaultConverters = {
     { QMetaType::Int, QLatin1String("[+-]?\\d+") },
     { QMetaType::Long, QLatin1String("[+-]?\\d+") },
     { QMetaType::LongLong, QLatin1String("[+-]?\\d+") },
@@ -62,8 +63,6 @@ const QMap<int, QLatin1String> defaultConverters = {
 
     { QMetaType::Void, QLatin1String("") },
 };
-
-}
 
 /*!
     \class QHttpServerRouter
