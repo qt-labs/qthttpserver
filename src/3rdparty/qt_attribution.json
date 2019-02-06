@@ -3,6 +3,7 @@
     "Name": "HTTP request/response parser for C",
     "QDocModule": "qthttpserver",
     "QtUsage": "Used in Qt HttpServer.",
+    "Version": "2.9.0"
 
     "License": "MIT License",
     "LicenseId": "MIT",
