@@ -120,7 +120,8 @@ void tst_QAbstractHttpServer::checkListenWarns()
         bool handleRequest(const QHttpServerRequest &, QTcpSocket *) override { return true; }
     } server;
     auto tcpServer = new QTcpServer;
-    QTest::ignoreMessage(QtWarningMsg, QRegularExpression("The TCP server .* is not listening."));
+    QTest::ignoreMessage(QtWarningMsg,
+                         QRegularExpression(QStringLiteral("The TCP server .* is not listening.")));
     server.bind(tcpServer);
 }
 
