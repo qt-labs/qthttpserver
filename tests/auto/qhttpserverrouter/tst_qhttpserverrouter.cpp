@@ -35,6 +35,7 @@
 #include <QtTest/qsignalspy.h>
 #include <QtTest/qtest.h>
 #include <QtNetwork/qnetworkaccessmanager.h>
+#include <QtNetwork/qtcpsocket.h>
 
 Q_DECLARE_METATYPE(QNetworkAccessManager::Operation);
 
