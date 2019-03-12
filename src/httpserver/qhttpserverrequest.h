@@ -63,7 +63,18 @@ public:
         Post    = 0x0008,
         Head    = 0x0010,
         Options = 0x0020,
-        Patch   = 0x0040
+        Patch   = 0x0040,
+
+        All = Get | Put | Delete | Post | Head | Options | Patch,
+
+        // Include upper-case aliases for the sake of parsing from strings:
+        GET     = Get,
+        PUT     = Put,
+        DELETE  = Delete,
+        POST    = Post,
+        HEAD    = Head,
+        OPTIONS = Options,
+        PATCH   = Patch
     };
     Q_ENUM(Method)
     Q_DECLARE_FLAGS(Methods, Method)

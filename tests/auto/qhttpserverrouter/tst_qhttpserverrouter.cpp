@@ -71,7 +71,7 @@ struct HttpServer : QAbstractHttpServer {
     template<typename ViewHandler>
     void route(const char *path, ViewHandler &&viewHandler)
     {
-        route(path, QHttpServerRequest::Methods(nullptr), std::forward<ViewHandler>(viewHandler));
+        route(path, QHttpServerRequest::Method::All, std::forward<ViewHandler>(viewHandler));
     }
 
     bool handleRequest(const QHttpServerRequest &request, QTcpSocket *socket) override {

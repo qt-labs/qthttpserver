@@ -56,6 +56,9 @@ public:
     explicit QHttpServerRouterRule(const QString &pathPattern,
                                    const QHttpServerRequest::Methods methods,
                                    RouterHandler &&routerHandler);
+    explicit QHttpServerRouterRule(const QString &pathPattern,
+                                   const char * methods,
+                                   RouterHandler &&routerHandler);
 
     QHttpServerRouterRule(QHttpServerRouterRule &&other) = delete;
     QHttpServerRouterRule &operator=(QHttpServerRouterRule &&other) = delete;
@@ -64,6 +67,8 @@ public:
 
 protected:
     bool exec(const QHttpServerRequest &request, QTcpSocket *socket) const;
+
+    bool hasValidMethods() const;
 
     bool createPathRegexp(const std::initializer_list<int> &metaTypes,
                           const QMap<int, QLatin1String> &converters);

@@ -30,7 +30,9 @@
 #include <QtHttpServer/qhttpserverrouterrule.h>
 
 #include <private/qhttpserverrouterrule_p.h>
+#include <private/qhttpserverrequest_p.h>
 
+#include <QtCore/qmetaobject.h>
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qregularexpression.h>
 #include <QtCore/qdebug.h>
@@ -38,6 +40,27 @@
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcRouterRule, "qt.httpserver.router.rule")
+
+static QHttpServerRequest::Methods strToMethods(const char *strMethods)
+{
+    QHttpServerRequest::Methods methods;
+
+    static const auto index = QHttpServerRequest::staticMetaObject.indexOfEnumerator("Method");
+    if (index == -1) {
+        qCWarning(lcRouterRule, "Can not find QMetaEnum for enum Method");
+        return methods;
+    }
+
+    static const QMetaEnum en = QHttpServerRequest::staticMetaObject.enumerator(index);
+    bool ok = false;
+    const int val = en.keysToValue(strMethods, &ok);
+    if (ok)
+        methods = static_cast<decltype(methods)>(val);
+    else
+        qCWarning(lcRouterRule, "Can not convert %s to QHttpServerRequest::Method", strMethods);
+
+    return methods;
+}
 
 /*!
     \class QHttpServerRouterRule
@@ -94,12 +117,14 @@ Q_LOGGING_CATEGORY(lcRouterRule, "qt.httpserver.router.rule")
 /*!
     Constructs a rule with pathPattern \a pathPattern, and routerHandler \a routerHandler.
 
-    The rule accepts any HTTP method.
+    The rule accepts all HTTP methods by default.
+
+    \sq QHttpServerRequest::Method
 */
 QHttpServerRouterRule::QHttpServerRouterRule(const QString &pathPattern,
                                              RouterHandler &&routerHandler)
     : QHttpServerRouterRule(pathPattern,
-                            QHttpServerRequest::Methods(),
+                            QHttpServerRequest::Method::All,
                             std::forward<RouterHandler>(routerHandler))
 {
 }
@@ -107,6 +132,10 @@ QHttpServerRouterRule::QHttpServerRouterRule(const QString &pathPattern,
 /*!
     Constructs a rule with pathPattern \a pathPattern, methods \a methods
     and routerHandler \a routerHandler.
+
+    The rule accepts any combinations of available HTTP methods.
+
+    \sa QHttpServerRequest::Method
 */
 QHttpServerRouterRule::QHttpServerRouterRule(const QString &pathPattern,
                                              const QHttpServerRequest::Methods methods,
@@ -115,6 +144,24 @@ QHttpServerRouterRule::QHttpServerRouterRule(const QString &pathPattern,
         new QHttpServerRouterRulePrivate{pathPattern,
                                          methods,
                                          std::forward<RouterHandler>(routerHandler), {}})
+{
+}
+
+/*!
+    Constructs a rule with pathPattern \a pathPattern, methods \a methods
+    and routerHandler \a routerHandler.
+
+    \note \a methods shall be joined with | as separator (not spaces or commas)
+    and that either the upper-case or the capitalised form may be used.
+
+    \sa QMetaEnum::keysToValue
+*/
+QHttpServerRouterRule::QHttpServerRouterRule(const QString &pathPattern,
+                                             const char *methods,
+                                             RouterHandler &&routerHandler)
+    : QHttpServerRouterRule(pathPattern,
+                            strToMethods(methods),
+                            std::forward<RouterHandler>(routerHandler))
 {
 }
 
@@ -131,6 +178,15 @@ QHttpServerRouterRule::QHttpServerRouterRule(QHttpServerRouterRulePrivate *d)
 */
 QHttpServerRouterRule::~QHttpServerRouterRule()
 {
+}
+
+/*!
+    Returns true if the methods is valid
+*/
+bool QHttpServerRouterRule::hasValidMethods() const
+{
+    Q_D(const QHttpServerRouterRule);
+    return d->methods & QHttpServerRequest::Method::All;
 }
 
 /*!

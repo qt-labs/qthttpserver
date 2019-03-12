@@ -41,6 +41,7 @@
 #include <QtCore/qlist.h>
 #include <QtCore/qbytearray.h>
 #include <QtCore/qdatetime.h>
+#include <QtCore/qmetaobject.h>
 
 #include <QtNetwork/qnetworkaccessmanager.h>
 #include <QtNetwork/qnetworkreply.h>
@@ -85,6 +86,8 @@ private slots:
     void routeGet();
     void routePost_data();
     void routePost();
+    void routeDelete_data();
+    void routeDelete();
     void invalidRouterArguments();
 
 private:
@@ -111,6 +114,24 @@ void tst_QHttpServer::initTestCase()
 
     httpserver.route("/", QHttpServerRequest::Method::Post, [] () {
         return "Hello world post";
+    });
+
+    httpserver.route("/post-and-get", "GET|POST", [] (const QHttpServerRequest &request) {
+        if (request.method() == QHttpServerRequest::Method::Get)
+            return "Hello world get";
+        else if (request.method() == QHttpServerRequest::Method::Post)
+            return "Hello world post";
+
+        return "This should not work";
+    });
+
+    httpserver.route("/any", "All", [] (const QHttpServerRequest &request) {
+        static const int index = QHttpServerRequest::staticMetaObject.indexOfEnumerator("Method");
+        if (index == -1)
+            return "Error: Could not find enum Method";
+
+        static const QMetaEnum en = QHttpServerRequest::staticMetaObject.enumerator(index);
+        return en.valueToKey(static_cast<int>(request.method()));
     });
 
     httpserver.route("/page/", [] (const qint32 number) {
@@ -300,12 +321,29 @@ void tst_QHttpServer::routeGet_data()
         << "text/html"
         << "Custom router rule: 10, key=12";
 
+    QTest::addRow("post-and-get, get")
+        << "/post-and-get"
+        << 200
+        << "text/html"
+        << "Hello world get";
+
+    QTest::addRow("invalid-rule-method, get")
+        << "/invalid-rule-method"
+        << 404
+        << "text/html"
+        << "";
+
     QTest::addRow("check custom type, data=1")
         << "/check-custom-type/1"
         << 200
         << "text/html"
         << "data = 1";
 
+    QTest::addRow("any, get")
+        << "/any"
+        << 200
+        << "text/html"
+        << "Get";
 }
 
 void tst_QHttpServer::routeGet()
@@ -396,6 +434,43 @@ void tst_QHttpServer::routePost()
     QCOMPARE(reply->readAll(), body);
 }
 
+void tst_QHttpServer::routeDelete_data()
+{
+    QTest::addColumn<QString>("url");
+    QTest::addColumn<int>("code");
+    QTest::addColumn<QString>("type");
+    QTest::addColumn<QString>("data");
+
+    QTest::addRow("post-and-get, delete")
+        << "/post-and-get"
+        << 404
+        << "text/html"
+        << "";
+
+    QTest::addRow("any, delete")
+        << "/any"
+        << 200
+        << "text/html"
+        << "Delete";
+}
+
+void tst_QHttpServer::routeDelete()
+{
+    QFETCH(QString, url);
+    QFETCH(int, code);
+    QFETCH(QString, type);
+    QFETCH(QString, data);
+
+    QNetworkAccessManager networkAccessManager;
+    const QUrl requestUrl(urlBase.arg(url));
+    auto reply = networkAccessManager.deleteResource(QNetworkRequest(requestUrl));
+
+    QTRY_VERIFY(reply->isFinished());
+
+    QCOMPARE(reply->header(QNetworkRequest::ContentTypeHeader), type);
+    QCOMPARE(reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt(), code);
+}
+
 struct CustomType {
     CustomType() {}
     CustomType(const QString &) {}
@@ -406,6 +481,24 @@ void tst_QHttpServer::invalidRouterArguments()
     QCOMPARE(
         httpserver.route("/datetime/", [] (const QDateTime &datetime) {
             return QString("datetime: %1").arg(datetime.toString());
+        }),
+        false);
+
+    QCOMPARE(
+        httpserver.route("/invalid-rule-method", "GeT", [] () {
+            return "";
+        }),
+        false);
+
+    QCOMPARE(
+        httpserver.route("/invalid-rule-method", "Garbage", [] () {
+            return "";
+        }),
+        false);
+
+    QCOMPARE(
+        httpserver.route("/invalid-rule-method", "Unknown", [] () {
+            return "";
         }),
         false);
 

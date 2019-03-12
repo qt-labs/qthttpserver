@@ -281,7 +281,7 @@ bool QHttpServerRouter::addRuleImpl(QHttpServerRouterRule *rule,
 {
     Q_D(QHttpServerRouter);
 
-    if (!rule->createPathRegexp(types, d->converters)) {
+    if (!rule->hasValidMethods() || !rule->createPathRegexp(types, d->converters)) {
         delete rule;
         return false;
     }
