@@ -62,10 +62,10 @@ public:
         request(request),
         socket(socket)
     {
-        const auto server = QStringLiteral("%1/%2(%3)")
-                .arg(QCoreApplication::instance()->applicationName())
-                .arg(QCoreApplication::instance()->applicationVersion())
-                .arg(QSysInfo::prettyProductName());
+        const auto server = QStringLiteral("%1/%2(%3)").arg(
+                    QCoreApplication::instance()->applicationName(),
+                    QCoreApplication::instance()->applicationVersion(),
+                    QSysInfo::prettyProductName());
         addHeader(QByteArrayLiteral("Server"), server.toUtf8());
     }
 
