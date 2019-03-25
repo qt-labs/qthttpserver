@@ -116,6 +116,14 @@ uint QHttpServerRequestPrivate::headerHash(const QString &key) const
     return qHash(key.toLower(), headersSeed);
 }
 
+void QHttpServerRequestPrivate::clear()
+{
+    url.clear();
+    lastHeader.clear();
+    headers.clear();
+    body.clear();
+}
+
 bool QHttpServerRequestPrivate::parseUrl(const char *at, size_t length, bool connect, QUrl *url)
 {
     static const std::map<std::size_t, std::function<void(const QString &, QUrl *)>> functions {

@@ -94,6 +94,9 @@ void QAbstractHttpServerPrivate::handleReadyRead()
     if (!socket->isTransactionStarted())
         socket->startTransaction();
 
+    if (requestPrivate->state == QHttpServerRequestPrivate::State::OnMessageComplete)
+        requestPrivate->clear();
+
     if (!requestPrivate->parse(socket)) {
         socket->disconnect();
         return;

@@ -84,6 +84,7 @@ private slots:
     void initTestCase();
     void routeGet_data();
     void routeGet();
+    void routeKeepAlive();
     void routePost_data();
     void routePost();
     void routeDelete_data();
@@ -179,9 +180,6 @@ void tst_QHttpServer::initTestCase()
                     .arg(num)
                     .arg(request.query().queryItemValue("key"));
     });
-
-    urlBase = QStringLiteral("http://localhost:%1%2").arg(httpserver.listen());
-
 
     httpserver.router()->addConverter<CustomArg>(QLatin1String("[+-]?\\d+"));
     httpserver.route("/check-custom-type/", [] (const CustomArg &customArg) {
@@ -362,6 +360,64 @@ void tst_QHttpServer::routeGet()
     QCOMPARE(reply->header(QNetworkRequest::ContentTypeHeader), type);
     QCOMPARE(reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt(), code);
     QCOMPARE(reply->readAll(), body);
+}
+
+void tst_QHttpServer::routeKeepAlive()
+{
+    httpserver.route("/keep-alive", [] (const QHttpServerRequest &req) -> QHttpServerResponse {
+        if (req.headers()["Connection"] != "keep-alive")
+            return QHttpServerResponse::StatusCode::NotFound;
+
+        return QString("header: %1, query: %2, body: %3, method: %4")
+            .arg(req.value("CustomHeader"),
+                 req.url().query(),
+                 req.body())
+            .arg(static_cast<int>(req.method()));
+    });
+
+    QNetworkAccessManager networkAccessManager;
+    QNetworkRequest request(urlBase.arg("/keep-alive"));
+    request.setRawHeader(QByteArray("Connection"), QByteArray("keep-alive"));
+
+    auto checkReply = [] (QNetworkReply *reply, const QString &response) {
+        QTRY_VERIFY(reply->isFinished());
+
+        QCOMPARE(reply->header(QNetworkRequest::ContentTypeHeader), "text/html");
+        QCOMPARE(reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt(), 200);
+        QCOMPARE(reply->readAll(), response);
+    };
+
+    checkReply(networkAccessManager.get(request),
+               QString("header: , query: , body: , method: %1")
+                 .arg(static_cast<int>(QHttpServerRequest::Method::Get)));
+    if (QTest::currentTestFailed())
+        return;
+
+    request.setUrl(urlBase.arg("/keep-alive?po=98"));
+    request.setRawHeader("CustomHeader", "1");
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "text/html");
+
+    checkReply(networkAccessManager.post(request, QByteArray("test")),
+               QString("header: 1, query: po=98, body: test, method: %1")
+                 .arg(static_cast<int>(QHttpServerRequest::Method::Post)));
+    if (QTest::currentTestFailed())
+        return;
+
+    request = QNetworkRequest(urlBase.arg("/keep-alive"));
+    request.setRawHeader(QByteArray("Connection"), QByteArray("keep-alive"));
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "text/html");
+
+    checkReply(networkAccessManager.post(request, QByteArray("")),
+               QString("header: , query: , body: , method: %1")
+                 .arg(static_cast<int>(QHttpServerRequest::Method::Post)));
+    if (QTest::currentTestFailed())
+        return;
+
+    checkReply(networkAccessManager.get(request),
+               QString("header: , query: , body: , method: %1")
+                 .arg(static_cast<int>(QHttpServerRequest::Method::Get)));
+    if (QTest::currentTestFailed())
+        return;
 }
 
 void tst_QHttpServer::routePost_data()

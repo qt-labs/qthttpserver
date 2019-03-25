@@ -85,6 +85,8 @@ public:
     const uint headersSeed = uint(qGlobalQHashSeed());
     uint headerHash(const QString &key) const;
 
+    void clear();
+
 private:
     static http_parser_settings httpParserSettings;
     static bool parseUrl(const char *at, size_t length, bool connect, QUrl *url);
