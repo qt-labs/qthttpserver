@@ -166,6 +166,12 @@ void tst_QHttpServer::initTestCase()
     httpserver.route("/check-custom-type/", [] (const CustomArg &customArg) {
         return QString("data = %1").arg(customArg.data);
     });
+
+    httpserver.route("/post-body", "POST", [] (const QHttpServerRequest &request) {
+        return request.body();
+    });
+
+    urlBase = QStringLiteral("http://localhost:%1%2").arg(httpserver.listen());
 }
 
 void tst_QHttpServer::routeGet_data()
@@ -334,6 +340,38 @@ void tst_QHttpServer::routePost_data()
         << "text/html"
         << ""
         << "Hello world post";
+
+    QTest::addRow("post-and-get, post")
+        << "/post-and-get"
+        << 200
+        << "text/html"
+        << ""
+        << "Hello world post";
+
+    QTest::addRow("any, post")
+        << "/any"
+        << 200
+        << "text/html"
+        << ""
+        << "Post";
+
+    QTest::addRow("post-body")
+        << "/post-body"
+        << 200
+        << "text/html"
+        << "some post data"
+        << "some post data";
+
+    QString body;
+    for (int i = 0; i < 10000; i++)
+        body.append(QString::number(i));
+
+    QTest::addRow("post-body - huge body, chunk test")
+        << "/post-body"
+        << 200
+        << "text/html"
+        << body
+        << body;
 }
 
 void tst_QHttpServer::routePost()
@@ -345,8 +383,11 @@ void tst_QHttpServer::routePost()
     QFETCH(QString, body);
 
     QNetworkAccessManager networkAccessManager;
-    const QUrl requestUrl(urlBase.arg(url));
-    auto reply = networkAccessManager.post(QNetworkRequest(requestUrl), data.toUtf8());
+    QNetworkRequest request(QUrl(urlBase.arg(url)));
+    if (data.size())
+        request.setHeader(QNetworkRequest::ContentTypeHeader, "text/html");
+
+    auto reply = networkAccessManager.post(request, data.toUtf8());
 
     QTRY_VERIFY(reply->isFinished());
 

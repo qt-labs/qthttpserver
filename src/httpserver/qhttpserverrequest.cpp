@@ -209,7 +209,13 @@ int QHttpServerRequestPrivate::onBody(http_parser *httpParser, const char *at, s
     qCDebug(lc) << httpParser << QString::fromUtf8(at, int(length));
     auto i = instance(httpParser);
     i->state = State::OnBody;
-    i->body = QByteArray(at, int(length));
+    if (i->body.isEmpty()) {
+        i->body.reserve(
+                static_cast<int>(httpParser->content_length) +
+                static_cast<int>(length));
+    }
+
+    i->body.append(at, int(length));
     return 0;
 }
 
