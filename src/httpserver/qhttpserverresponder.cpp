@@ -38,6 +38,8 @@
 #include <map>
 #include <memory>
 
+#include "../3rdparty/http-parser/http_parser.h"
+
 QT_BEGIN_NAMESPACE
 
 static const QLoggingCategory &lc()
@@ -48,69 +50,9 @@ static const QLoggingCategory &lc()
 
 // https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
 static const std::map<QHttpServerResponder::StatusCode, QByteArray> statusString {
-#define STATUS_CODE(CODE, TEXT) { QHttpServerResponder::StatusCode::CODE, QByteArrayLiteral(TEXT) }
-    STATUS_CODE(Continue,                      "Continue"),
-    STATUS_CODE(SwitchingProtocols,            "Switching Protocols"),
-    STATUS_CODE(Processing,                    "Processing"),
-    STATUS_CODE(Ok,                            "OK"),
-    STATUS_CODE(Created,                       "Created"),
-    STATUS_CODE(Accepted,                      "Accepted"),
-    STATUS_CODE(NonAuthoritativeInformation,   "Non-Authoritative Information"),
-    STATUS_CODE(NoContent,                     "No Content"),
-    STATUS_CODE(ResetContent,                  "Reset Content"),
-    STATUS_CODE(PartialContent,                "Partial Content"),
-    STATUS_CODE(MultiStatus,                   "Multi Status"),
-    STATUS_CODE(AlreadyReported,               "Already Reported"),
-    STATUS_CODE(IMUsed,                        "IM Used"),
-    STATUS_CODE(MultipleChoices,               "Multiple Choices"),
-    STATUS_CODE(MovedPermanently,              "Moved Permanently"),
-    STATUS_CODE(Found,                         "Found"),
-    STATUS_CODE(SeeOther,                      "See Other"),
-    STATUS_CODE(NotModified,                   "Not Modified"),
-    STATUS_CODE(UseProxy,                      "Use Proxy"),
-    STATUS_CODE(TemporaryRedirect,             "Temporary Redirect"),
-    STATUS_CODE(PermanentRedirect,             "Permanent Redirect"),
-    STATUS_CODE(BadRequest,                    "Bad Request"),
-    STATUS_CODE(Unauthorized,                  "Unauthorized"),
-    STATUS_CODE(PaymentRequired,               "Payment Required"),
-    STATUS_CODE(Forbidden,                     "Forbidden"),
-    STATUS_CODE(NotFound,                      "Not Found"),
-    STATUS_CODE(MethodNotAllowed,              "Method Not Allowed"),
-    STATUS_CODE(NotAcceptable,                 "Not Acceptable"),
-    STATUS_CODE(ProxyAuthenticationRequired,   "Proxy Authentication Required"),
-    STATUS_CODE(RequestTimeout,                "Request Time-out"),
-    STATUS_CODE(Conflict,                      "Conflict"),
-    STATUS_CODE(Gone,                          "Gone"),
-    STATUS_CODE(LengthRequired,                "Length Required"),
-    STATUS_CODE(PreconditionFailed,            "Precondition Failed"),
-    STATUS_CODE(PayloadTooLarge,               "Payload Too Large"),
-    STATUS_CODE(UriTooLong,                    "URI Too Long"),
-    STATUS_CODE(UnsupportedMediaType,          "Unsupported Media Type"),
-    STATUS_CODE(RequestRangeNotSatisfiable,    "Request Range Not Satisfiable"),
-    STATUS_CODE(ExpectationFailed,             "Expectation Failed"),
-    STATUS_CODE(ImATeapot,                     "I'm A Teapot"),
-    STATUS_CODE(MisdirectedRequest,            "Misdirected Request"),
-    STATUS_CODE(UnprocessableEntity,           "Unprocessable Entity"),
-    STATUS_CODE(Locked,                        "Locked"),
-    STATUS_CODE(FailedDependency,              "Failed Dependency"),
-    STATUS_CODE(UpgradeRequired,               "Upgrade Required"),
-    STATUS_CODE(PreconditionRequired,          "Precondition Required"),
-    STATUS_CODE(TooManyRequests,               "Too Many Requests"),
-    STATUS_CODE(RequestHeaderFieldsTooLarge,   "Request Header Fields Too Large"),
-    STATUS_CODE(UnavailableForLegalReasons,    "Unavailable For Legal Reasons"),
-    STATUS_CODE(InternalServerError,           "Internal Server Error"),
-    STATUS_CODE(NotImplemented,                "Not Implemented"),
-    STATUS_CODE(BadGateway,                    "Bad Gateway"),
-    STATUS_CODE(ServiceUnavailable,            "Service Unavailable"),
-    STATUS_CODE(GatewayTimeout,                "Gateway Time-out"),
-    STATUS_CODE(HttpVersionNotSupported,       "HTTP Version not supported"),
-    STATUS_CODE(VariantAlsoNegotiates,         "Variant Also Negotiates"),
-    STATUS_CODE(InsufficientStorage,           "Insufficient Storage"),
-    STATUS_CODE(LoopDetected,                  "Loop Detected"),
-    STATUS_CODE(NotExtended,                   "Not Extended"),
-    STATUS_CODE(NetworkAuthenticationRequired, "Network Authentication Required"),
-    STATUS_CODE(NetworkConnectTimeoutError,    "Network Connect Timeout Error"),
-#undef STATUS_CODE
+#define XX(num, name, string) { static_cast<QHttpServerResponder::StatusCode>(num), QByteArrayLiteral(#string) },
+  HTTP_STATUS_MAP(XX)
+#undef XX
 };
 
 static const QByteArray contentTypeString(QByteArrayLiteral("Content-Type"));
