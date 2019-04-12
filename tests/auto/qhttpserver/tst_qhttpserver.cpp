@@ -452,7 +452,7 @@ void tst_QHttpServer::routePost_data()
     QTest::addRow("post-body")
         << "/post-body"
         << 200
-        << "text/html"
+        << "text/plain"
         << "some post data"
         << "some post data";
 
@@ -463,7 +463,7 @@ void tst_QHttpServer::routePost_data()
     QTest::addRow("post-body - huge body, chunk test")
         << "/post-body"
         << 200
-        << "text/html"
+        << "text/plain"
         << body
         << body;
 }

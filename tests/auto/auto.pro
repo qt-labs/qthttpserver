@@ -5,4 +5,5 @@ SUBDIRS = \
     qabstracthttpserver \
     qhttpserver \
     qhttpserverresponder \
-    qhttpserverrouter
+    qhttpserverrouter \
+    qhttpserverresponse

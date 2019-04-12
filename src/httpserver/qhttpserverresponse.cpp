@@ -33,6 +33,7 @@
 
 #include <QtCore/qjsondocument.h>
 #include <QtCore/qjsonobject.h>
+#include <QtCore/qmimedatabase.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -54,17 +55,17 @@ QHttpServerResponse::QHttpServerResponse(const QHttpServerResponse::StatusCode s
 }
 
 QHttpServerResponse::QHttpServerResponse(const char *data)
-    : QHttpServerResponse(mimeTextHtml, QByteArray(data))
+    : QHttpServerResponse(QByteArray(data))
 {
 }
 
 QHttpServerResponse::QHttpServerResponse(const QString &data)
-    : QHttpServerResponse(mimeTextHtml, data.toUtf8())
+    : QHttpServerResponse(data.toUtf8())
 {
 }
 
 QHttpServerResponse::QHttpServerResponse(const QByteArray &data)
-    : QHttpServerResponse(mimeTextHtml, data)
+    : QHttpServerResponse(QMimeDatabase().mimeTypeForData(data).name().toLocal8Bit(), data)
 {
 }
 
