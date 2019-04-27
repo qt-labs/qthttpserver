@@ -62,6 +62,7 @@ public:
                         const QByteArray &data,
                         const StatusCode status = StatusCode::Ok);
     virtual ~QHttpServerResponse();
+    static QHttpServerResponse fromFile(const QString &fileName);
 
     QByteArray data() const;
 

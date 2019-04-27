@@ -104,6 +104,10 @@ int main(int argc, char *argv[])
         };
     });
 
+    httpServer.route("/assets/<arg>", [] (const QUrl &url) {
+        return QHttpServerResponse::fromFile(QStringLiteral(":/assets/%1").arg(url.path()));
+    });
+
     const auto port = httpServer.listen(QHostAddress::Any);
     if (port == -1) {
         qDebug() << QCoreApplication::translate(

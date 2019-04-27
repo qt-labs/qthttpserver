@@ -192,6 +192,10 @@ void tst_QHttpServer::initTestCase()
         return request.body();
     });
 
+    httpserver.route("/file/", [] (const QString &file) {
+        return QHttpServerResponse::fromFile(QFINDTESTDATA(QLatin1String("data/") + file));
+    });
+
     urlBase = QStringLiteral("http://localhost:%1%2").arg(httpserver.listen());
 }
 
@@ -344,6 +348,18 @@ void tst_QHttpServer::routeGet_data()
         << 200
         << "text/plain"
         << "Get";
+
+    QTest::addRow("response from html file")
+        << "/file/text.html"
+        << 200
+        << "text/html"
+        << "<html></html>";
+
+    QTest::addRow("response from json file")
+        << "/file/application.json"
+        << 200
+        << "application/json"
+        << "{ \"key\": \"value\" }";
 }
 
 void tst_QHttpServer::routeGet()
@@ -361,7 +377,7 @@ void tst_QHttpServer::routeGet()
 
     QCOMPARE(reply->header(QNetworkRequest::ContentTypeHeader), type);
     QCOMPARE(reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt(), code);
-    QCOMPARE(reply->readAll(), body);
+    QCOMPARE(reply->readAll().trimmed(), body);
 }
 
 void tst_QHttpServer::routeKeepAlive()

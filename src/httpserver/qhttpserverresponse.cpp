@@ -31,6 +31,7 @@
 
 #include <private/qhttpserverresponse_p.h>
 
+#include <QtCore/qfile.h>
 #include <QtCore/qjsondocument.h>
 #include <QtCore/qjsonobject.h>
 #include <QtCore/qmimedatabase.h>
@@ -83,6 +84,17 @@ QHttpServerResponse::QHttpServerResponse(const QByteArray &mimeType,
 
 QHttpServerResponse::~QHttpServerResponse()
 {
+}
+
+QHttpServerResponse QHttpServerResponse::fromFile(const QString &fileName)
+{
+    QFile file(fileName);
+    if (!file.open(QFile::ReadOnly))
+        return QHttpServerResponse(StatusCode::NotFound);
+    const QByteArray data = file.readAll();
+    file.close();
+    const QByteArray mimeType = QMimeDatabase().mimeTypeForFileNameAndData(fileName, data).name().toLocal8Bit();
+    return QHttpServerResponse(mimeType, data);
 }
 
 QHttpServerResponse::QHttpServerResponse(QHttpServerResponsePrivate *d)

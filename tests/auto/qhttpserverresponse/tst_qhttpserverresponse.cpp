@@ -41,6 +41,8 @@ class tst_QHttpServerResponse : public QObject
 private slots:
     void mimeTypeDetection_data();
     void mimeTypeDetection();
+    void mimeTypeDetectionFromFile_data();
+    void mimeTypeDetectionFromFile();
 };
 
 void tst_QHttpServerResponse::mimeTypeDetection_data()
@@ -84,6 +86,48 @@ void tst_QHttpServerResponse::mimeTypeDetection()
     file.close();
 
     QCOMPARE(response.mimeType(), mimeType);
+}
+
+void tst_QHttpServerResponse::mimeTypeDetectionFromFile_data()
+{
+    QTest::addColumn<QString>("content");
+    QTest::addColumn<QByteArray>("mimeType");
+
+    QTest::addRow("application/x-zerosize")
+            << QFINDTESTDATA("data/empty")
+            << QByteArrayLiteral("application/x-zerosize");
+
+    QTest::addRow("text/plain")
+            << QFINDTESTDATA("data/text.plain")
+            << QByteArrayLiteral("text/plain");
+
+    QTest::addRow("text/html")
+            << QFINDTESTDATA("data/text.html")
+            << QByteArrayLiteral("text/html");
+
+    QTest::addRow("image/png")
+            << QFINDTESTDATA("data/image.png")
+            << QByteArrayLiteral("image/png");
+
+    QTest::addRow("image/jpeg")
+            << QFINDTESTDATA("data/image.jpeg")
+            << QByteArrayLiteral("image/jpeg");
+
+    QTest::addRow("image/svg+xml")
+            << QFINDTESTDATA("data/image.svg")
+            << QByteArrayLiteral("image/svg+xml");
+
+    QTest::addRow("application/json")
+            << QFINDTESTDATA("data/application.json")
+            << QByteArrayLiteral("application/json");
+}
+
+void tst_QHttpServerResponse::mimeTypeDetectionFromFile()
+{
+    QFETCH(QString, content);
+    QFETCH(QByteArray, mimeType);
+
+    QCOMPARE(QHttpServerResponse::fromFile(content).mimeType(), mimeType);
 }
 
 QT_END_NAMESPACE
