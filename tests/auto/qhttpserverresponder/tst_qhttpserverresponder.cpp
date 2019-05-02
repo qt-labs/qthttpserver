@@ -191,7 +191,7 @@ void tst_QHttpServerResponder::writeFile()
 
     QCOMPARE(reply->header(QNetworkRequest::ContentTypeHeader), type);
     QCOMPARE(reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt(), code);
-    QCOMPARE(reply->readAll(), data);
+    QCOMPARE(reply->readAll().trimmed(), data);
 
     QCOMPARE(spyDestroyIoDevice.count(), 1);
 }

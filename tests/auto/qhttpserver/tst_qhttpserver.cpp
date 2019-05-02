@@ -203,7 +203,7 @@ void tst_QHttpServer::routeGet_data()
     QTest::addRow("hello world")
         << "/"
         << 200
-        << "text/html"
+        << "text/plain"
         << "Hello world get";
 
     QTest::addRow("test msg")
@@ -221,19 +221,19 @@ void tst_QHttpServer::routeGet_data()
     QTest::addRow("arg:int")
         << "/page/10"
         << 200
-        << "text/html"
+        << "text/plain"
         << "page: 10";
 
     QTest::addRow("arg:-int")
         << "/page/-10"
         << 200
-        << "text/html"
+        << "text/plain"
         << "page: -10";
 
     QTest::addRow("arg:uint")
         << "/page/10/detail"
         << 200
-        << "text/html"
+        << "text/plain"
         << "page: 10 detail";
 
     QTest::addRow("arg:-uint")
@@ -245,60 +245,60 @@ void tst_QHttpServer::routeGet_data()
     QTest::addRow("arg:string")
         << "/user/test"
         << 200
-        << "text/html"
+        << "text/plain"
         << "test";
 
     QTest::addRow("arg:string")
         << "/user/test test ,!a+."
         << 200
-        << "text/html"
+        << "text/plain"
         << "test test ,!a+.";
 
     QTest::addRow("arg:string,ba")
         << "/user/james/bond"
         << 200
-        << "text/html"
+        << "text/plain"
         << "james-bond";
 
     QTest::addRow("arg:url")
         << "/test/api/v0/cmds?val=1"
         << 200
-        << "text/html"
+        << "text/plain"
         << "path: api/v0/cmds";
 
     QTest::addRow("arg:float 5.1")
         << "/api/v5.1"
         << 200
-        << "text/html"
+        << "text/plain"
         << "api 5.1v";
 
     QTest::addRow("arg:float 5.")
         << "/api/v5."
         << 200
-        << "text/html"
+        << "text/plain"
         << "api 5v";
 
     QTest::addRow("arg:float 6.0")
         << "/api/v6.0"
         << 200
-        << "text/html"
+        << "text/plain"
         << "api 6v";
 
     QTest::addRow("arg:float,uint")
         << "/api/v5.1/user/10"
         << 200
-        << "text/html"
+        << "text/plain"
         << "api 5.1v, user id - 10";
 
     QTest::addRow("arg:float,uint,query")
         << "/api/v5.2/user/11/settings?role=admin" << 200
-        << "text/html"
+        << "text/plain"
         << "api 5.2v, user id - 11, set settings role=admin#''";
 
     // The fragment isn't actually sent via HTTP (it's information for the user agent)
     QTest::addRow("arg:float,uint, query+fragment")
         << "/api/v5.2/user/11/settings?role=admin#tag"
-        << 200 << "text/html"
+        << 200 << "text/plain"
         << "api 5.2v, user id - 11, set settings role=admin#''";
 
     QTest::addRow("custom route rule")
@@ -310,19 +310,19 @@ void tst_QHttpServer::routeGet_data()
     QTest::addRow("custom route rule + query")
         << "/custom/10?key=11&g=1"
         << 200
-        << "text/html"
+        << "text/plain"
         << "Custom router rule: 10, key=11";
 
     QTest::addRow("custom route rule + query key req")
         << "/custom/10?g=1&key=12"
         << 200
-        << "text/html"
+        << "text/plain"
         << "Custom router rule: 10, key=12";
 
     QTest::addRow("post-and-get, get")
         << "/post-and-get"
         << 200
-        << "text/html"
+        << "text/plain"
         << "Hello world get";
 
     QTest::addRow("invalid-rule-method, get")
@@ -334,13 +334,13 @@ void tst_QHttpServer::routeGet_data()
     QTest::addRow("check custom type, data=1")
         << "/check-custom-type/1"
         << 200
-        << "text/html"
+        << "text/plain"
         << "data = 1";
 
     QTest::addRow("any, get")
         << "/any"
         << 200
-        << "text/html"
+        << "text/plain"
         << "Get";
 }
 
@@ -382,7 +382,7 @@ void tst_QHttpServer::routeKeepAlive()
     auto checkReply = [] (QNetworkReply *reply, const QString &response) {
         QTRY_VERIFY(reply->isFinished());
 
-        QCOMPARE(reply->header(QNetworkRequest::ContentTypeHeader), "text/html");
+        QCOMPARE(reply->header(QNetworkRequest::ContentTypeHeader), "text/plain");
         QCOMPARE(reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt(), 200);
         QCOMPARE(reply->readAll(), response);
     };
@@ -431,21 +431,21 @@ void tst_QHttpServer::routePost_data()
     QTest::addRow("hello world")
         << "/"
         << 200
-        << "text/html"
+        << "text/plain"
         << ""
         << "Hello world post";
 
     QTest::addRow("post-and-get, post")
         << "/post-and-get"
         << 200
-        << "text/html"
+        << "text/plain"
         << ""
         << "Hello world post";
 
     QTest::addRow("any, post")
         << "/any"
         << 200
-        << "text/html"
+        << "text/plain"
         << ""
         << "Post";
 
@@ -506,7 +506,7 @@ void tst_QHttpServer::routeDelete_data()
     QTest::addRow("any, delete")
         << "/any"
         << 200
-        << "text/html"
+        << "text/plain"
         << "Delete";
 }
 
