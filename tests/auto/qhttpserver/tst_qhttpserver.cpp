@@ -88,6 +88,10 @@ private slots:
     void routeDelete_data();
     void routeDelete();
     void invalidRouterArguments();
+    void checkRouteLambdaCapture();
+
+private:
+    void checkReply(QNetworkReply *reply, const QString &response);
 
 private:
     QHttpServer httpserver;
@@ -377,14 +381,6 @@ void tst_QHttpServer::routeKeepAlive()
     QNetworkRequest request(urlBase.arg("/keep-alive"));
     request.setRawHeader(QByteArray("Connection"), QByteArray("keep-alive"));
 
-    auto checkReply = [] (QNetworkReply *reply, const QString &response) {
-        QTRY_VERIFY(reply->isFinished());
-
-        QCOMPARE(reply->header(QNetworkRequest::ContentTypeHeader), "text/plain");
-        QCOMPARE(reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt(), 200);
-        QCOMPARE(reply->readAll(), response);
-    };
-
     checkReply(networkAccessManager.get(request),
                QString("header: , query: , body: , method: %1")
                  .arg(static_cast<int>(QHttpServerRequest::Method::Get)));
@@ -563,6 +559,38 @@ void tst_QHttpServer::invalidRouterArguments()
         }),
         false);
 }
+
+void tst_QHttpServer::checkRouteLambdaCapture()
+{
+    httpserver.route("/capture-this/", [this] () {
+        return urlBase;
+    });
+
+    QString msg = urlBase + "/pod";
+    httpserver.route("/capture-non-pod-data/", [&msg] () {
+        return msg;
+    });
+
+    QNetworkAccessManager networkAccessManager;
+    checkReply(networkAccessManager.get(QNetworkRequest(QUrl(urlBase.arg("/capture-this/")))),
+               urlBase);
+    if (QTest::currentTestFailed())
+        return;
+
+    checkReply(networkAccessManager.get(
+                   QNetworkRequest(QUrl(urlBase.arg("/capture-non-pod-data/")))),
+               msg);
+    if (QTest::currentTestFailed())
+        return;
+}
+
+void tst_QHttpServer::checkReply(QNetworkReply *reply, const QString &response) {
+    QTRY_VERIFY(reply->isFinished());
+
+    QCOMPARE(reply->header(QNetworkRequest::ContentTypeHeader), "text/plain");
+    QCOMPARE(reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt(), 200);
+    QCOMPARE(reply->readAll(), response);
+};
 
 QT_END_NAMESPACE
 

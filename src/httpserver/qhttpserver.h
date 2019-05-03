@@ -88,15 +88,17 @@ private:
     template<typename Rule, typename ViewHandler, typename ViewTraits, typename ... Args>
     bool routeImpl(Args &&...args, ViewHandler &&viewHandler)
     {
-        return router()->addRule<ViewHandler, ViewTraits>(
-                new Rule(std::forward<Args>(args)..., [this, &viewHandler] (
-                        QRegularExpressionMatch &match,
-                        const QHttpServerRequest &request,
-                        QTcpSocket *socket) {
+        auto routerHandler = [this, viewHandler] (
+                    QRegularExpressionMatch &match,
+                    const QHttpServerRequest &request,
+                    QTcpSocket *socket) mutable {
             auto boundViewHandler = router()->bindCaptured<ViewHandler, ViewTraits>(
-                    std::forward<ViewHandler>(viewHandler), match);
+                    std::move(viewHandler), match);
             responseImpl<ViewTraits>(boundViewHandler, request, socket);
-        }));
+        };
+
+        return router()->addRule<ViewHandler, ViewTraits>(
+                new Rule(std::forward<Args>(args)..., std::move(routerHandler)));
     }
 
     template<typename ViewTraits, typename T>
