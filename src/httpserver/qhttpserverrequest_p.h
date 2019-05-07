@@ -58,7 +58,6 @@ class QHttpServerRequestPrivate : public QSharedData
 public:
     QHttpServerRequestPrivate();
 
-    quint16 port = 0;
     enum class State {
         NotStarted,
         OnMessageBegin,
