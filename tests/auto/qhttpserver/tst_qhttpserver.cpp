@@ -77,8 +77,6 @@ private:
 class tst_QHttpServer final : public QObject
 {
     Q_OBJECT
-signals:
-    void test();
 
 private slots:
     void initTestCase();
