@@ -58,6 +58,7 @@ class QHttpServerRequestPrivate : public QSharedData
 public:
     QHttpServerRequestPrivate();
 
+    quint16 port = 0;
     enum class State {
         NotStarted,
         OnMessageBegin,
@@ -76,13 +77,13 @@ public:
 
     http_parser httpParser;
 
-    QString header(const QString &key) const;
+    QByteArray header(const QByteArray &key) const;
     bool parse(QIODevice *socket);
 
-    QString lastHeader;
-    QHash<uint, QPair<QString, QString>> headers;
+    QByteArray lastHeader;
+    QMap<uint, QPair<QByteArray, QByteArray>> headers;
     const uint headersSeed = uint(qGlobalQHashSeed());
-    uint headerHash(const QString &key) const;
+    uint headerHash(const QByteArray &key) const;
 
     void clear();
 

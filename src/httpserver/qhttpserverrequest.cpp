@@ -83,7 +83,7 @@ QHttpServerRequestPrivate::QHttpServerRequestPrivate()
     httpParser.data = this;
 }
 
-QString QHttpServerRequestPrivate::header(const QString &key) const
+QByteArray QHttpServerRequestPrivate::header(const QByteArray &key) const
 {
     return headers.value(headerHash(key)).second;
 }
@@ -111,7 +111,7 @@ bool QHttpServerRequestPrivate::parse(QIODevice *socket)
     return true;
 }
 
-uint QHttpServerRequestPrivate::headerHash(const QString &key) const
+uint QHttpServerRequestPrivate::headerHash(const QByteArray &key) const
 {
     return qHash(key.toLower(), headersSeed);
 }
@@ -183,8 +183,8 @@ int QHttpServerRequestPrivate::onHeaderField(http_parser *httpParser, const char
     qCDebug(lc) << httpParser << QString::fromUtf8(at, int(length));
     auto i = instance(httpParser);
     i->state = State::OnHeaders;
-    const auto key = QString::fromUtf8(at, int(length));
-    i->headers.insert(i->headerHash(key), qMakePair(key, QString()));
+    const auto key = QByteArray(at, int(length));
+    i->headers.insert(i->headerHash(key), qMakePair(key, QByteArray()));
     i->lastHeader = key;
     return 0;
 }
@@ -195,9 +195,9 @@ int QHttpServerRequestPrivate::onHeaderValue(http_parser *httpParser, const char
     auto i = instance(httpParser);
     i->state = State::OnHeaders;
     Q_ASSERT(!i->lastHeader.isEmpty());
-    const auto value = QString::fromUtf8(at, int(length));
+    const auto value = QByteArray(at, int(length));
     i->headers[i->headerHash(i->lastHeader)] = qMakePair(i->lastHeader, value);
-    if (i->lastHeader.compare(QStringLiteral("host"), Qt::CaseInsensitive) == 0)
+    if (i->lastHeader.compare(QByteArrayLiteral("host"), Qt::CaseInsensitive) == 0)
         parseUrl(at, length, true, &i->url);
 #if defined(QT_DEBUG)
     i->lastHeader.clear();
@@ -261,7 +261,7 @@ QHttpServerRequest::QHttpServerRequest(const QHttpServerRequest &other) :
 QHttpServerRequest::~QHttpServerRequest()
 {}
 
-QString QHttpServerRequest::value(const QString &key) const
+QByteArray QHttpServerRequest::value(const QByteArray &key) const
 {
     return d->headers.value(d->headerHash(key)).second;
 }

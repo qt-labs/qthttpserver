@@ -80,7 +80,7 @@ public:
     Q_DECLARE_FLAGS(Methods, Method)
     Q_FLAG(Methods)
 
-    QString value(const QString &key) const;
+    QByteArray value(const QByteArray &key) const;
     QUrl url() const;
     QUrlQuery query() const;
     Method method() const;

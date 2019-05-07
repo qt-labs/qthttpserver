@@ -108,11 +108,11 @@ void QAbstractHttpServerPrivate::handleReadyRead()
 
     if (requestPrivate->httpParser.upgrade) { // Upgrade
         const auto &headers = requestPrivate->headers;
-        const auto upgradeHash = requestPrivate->headerHash(QStringLiteral("upgrade"));
+        const auto upgradeHash = requestPrivate->headerHash(QByteArrayLiteral("upgrade"));
         const auto it = headers.find(upgradeHash);
         if (it != headers.end()) {
 #if defined(QT_WEBSOCKETS_LIB)
-            if (it.value().second.compare(QLatin1String("websocket"), Qt::CaseInsensitive) == 0) {
+            if (it.value().second.compare(QByteArrayLiteral("websocket"), Qt::CaseInsensitive) == 0) {
                 static const auto signal = QMetaMethod::fromSignal(
                             &QAbstractHttpServer::newWebSocketConnection);
                 if (q->isSignalConnected(signal)) {
