@@ -130,7 +130,7 @@ void QAbstractHttpServerPrivate::handleReadyRead()
             }
 #endif
         }
-        qCWarning(lcHttpServer, "Upgrade to %s not supported", qPrintable(it.value().second));
+        qCWarning(lcHttpServer, "Upgrade to %s not supported", it.value().second.constData());
         socket->disconnectFromHost();
         return;
     }
