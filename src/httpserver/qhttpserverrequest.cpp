@@ -78,7 +78,8 @@ http_parser_settings QHttpServerRequestPrivate::httpParserSettings {
     &QHttpServerRequestPrivate::onChunkComplete
 };
 
-QHttpServerRequestPrivate::QHttpServerRequestPrivate()
+QHttpServerRequestPrivate::QHttpServerRequestPrivate(const QHostAddress &remoteAddress)
+    : remoteAddress(remoteAddress)
 {
     httpParser.data = this;
 }
@@ -248,8 +249,8 @@ int QHttpServerRequestPrivate::onChunkComplete(http_parser *httpParser)
     return 0;
 }
 
-QHttpServerRequest::QHttpServerRequest() :
-    d(new QHttpServerRequestPrivate)
+QHttpServerRequest::QHttpServerRequest(const QHostAddress &remoteAddress) :
+    d(new QHttpServerRequestPrivate(remoteAddress))
 {}
 
 QHttpServerRequest::QHttpServerRequest(const QHttpServerRequest &other) :
@@ -307,6 +308,11 @@ QVariantMap QHttpServerRequest::headers() const
 QByteArray QHttpServerRequest::body() const
 {
     return d->body;
+}
+
+QHostAddress QHttpServerRequest::remoteAddress() const
+{
+    return d->remoteAddress;
 }
 
 QT_END_NAMESPACE

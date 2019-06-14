@@ -108,6 +108,10 @@ int main(int argc, char *argv[])
         return QHttpServerResponse::fromFile(QStringLiteral(":/assets/%1").arg(url.path()));
     });
 
+    httpServer.route("/remote_address", [](const QHttpServerRequest &request) {
+        return request.remoteAddress().toString();
+    });
+
     const auto port = httpServer.listen(QHostAddress::Any);
     if (port == -1) {
         qDebug() << QCoreApplication::translate(

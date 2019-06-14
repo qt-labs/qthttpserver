@@ -38,6 +38,7 @@
 #include <QtCore/qshareddata.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qurl.h>
+#include <QtNetwork/qhostaddress.h>
 
 #include "../3rdparty/http-parser/http_parser.h"
 
@@ -56,7 +57,7 @@ QT_BEGIN_NAMESPACE
 class QHttpServerRequestPrivate : public QSharedData
 {
 public:
-    QHttpServerRequestPrivate();
+    QHttpServerRequestPrivate(const QHostAddress &remoteAddress);
 
     quint16 port = 0;
     enum class State {
@@ -86,6 +87,7 @@ public:
     uint headerHash(const QByteArray &key) const;
 
     void clear();
+    QHostAddress remoteAddress;
 
 private:
     static http_parser_settings httpParserSettings;

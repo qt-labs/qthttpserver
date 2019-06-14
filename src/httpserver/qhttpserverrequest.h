@@ -36,6 +36,7 @@
 #include <QtCore/qglobal.h>
 #include <QtCore/qurl.h>
 #include <QtCore/qurlquery.h>
+#include <QtNetwork/qhostaddress.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -86,6 +87,7 @@ public:
     Method method() const;
     QVariantMap headers() const;
     QByteArray body() const;
+    QHostAddress remoteAddress() const;
 
 protected:
     QHttpServerRequest(const QHttpServerRequest &other);
@@ -95,7 +97,7 @@ private:
     friend Q_HTTPSERVER_EXPORT QDebug operator<<(QDebug debug, const QHttpServerRequest &request);
 #endif
 
-    QHttpServerRequest();
+    explicit QHttpServerRequest(const QHostAddress &remoteAddress);
 
     QHttpServerRequestPrivate *d = nullptr;
 };
