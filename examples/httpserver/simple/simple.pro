@@ -12,3 +12,5 @@ INSTALLS += target
 
 RESOURCES += \
     assets.qrc
+
+CONFIG += cmdline
