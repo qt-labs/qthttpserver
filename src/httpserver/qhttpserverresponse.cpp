@@ -71,7 +71,8 @@ QHttpServerResponse::QHttpServerResponse(const QByteArray &data)
 }
 
 QHttpServerResponse::QHttpServerResponse(const QJsonObject &data)
-    : QHttpServerResponse(mimeApplicationJson, QJsonDocument(data).toJson())
+    : QHttpServerResponse(mimeApplicationJson,
+                          QJsonDocument(data).toJson(QJsonDocument::Compact))
 {
 }
 

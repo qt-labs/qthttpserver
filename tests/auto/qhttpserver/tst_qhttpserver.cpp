@@ -42,6 +42,8 @@
 #include <QtCore/qbytearray.h>
 #include <QtCore/qdatetime.h>
 #include <QtCore/qmetaobject.h>
+#include <QtCore/qjsonobject.h>
+#include <QtCore/qjsonvalue.h>
 
 #include <QtNetwork/qnetworkaccessmanager.h>
 #include <QtNetwork/qnetworkreply.h>
@@ -194,6 +196,13 @@ void tst_QHttpServer::initTestCase()
 
     httpserver.route("/file/", [] (const QString &file) {
         return QHttpServerResponse::fromFile(QFINDTESTDATA(QLatin1String("data/") + file));
+    });
+
+    httpserver.route("/json-object/", [] () {
+        return QJsonObject{
+            {"property", "test"},
+            {"value", 1}
+        };
     });
 
     urlBase = QStringLiteral("http://localhost:%1%2").arg(httpserver.listen());
@@ -360,6 +369,12 @@ void tst_QHttpServer::routeGet_data()
         << 200
         << "application/json"
         << "{ \"key\": \"value\" }";
+
+    QTest::addRow("json-object")
+        << "/json-object/"
+        << 200
+        << "application/json"
+        << "{\"property\":\"test\",\"value\":1}";
 }
 
 void tst_QHttpServer::routeGet()
