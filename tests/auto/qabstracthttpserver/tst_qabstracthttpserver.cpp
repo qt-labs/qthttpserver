@@ -147,12 +147,26 @@ void tst_QAbstractHttpServer::websocket()
     auto tcpServer = new QTcpServer;
     tcpServer->listen();
     server.bind(tcpServer);
-    QWebSocket socket;
-    const QUrl url(QString::fromLatin1("ws://localhost:%1").arg(tcpServer->serverPort()));
-    socket.open(url);
+    auto makeWebSocket = [this, tcpServer] () mutable {
+        auto s = new QWebSocket(QString::fromUtf8(""),
+                                QWebSocketProtocol::VersionLatest,
+                                this);
+        const QUrl url(QString::fromLatin1("ws://localhost:%1").arg(tcpServer->serverPort()));
+        s->open(url);
+        return s;
+    };
+
+    // We have to send two requests to make sure that swapping between
+    // QTcpSocket and QWebSockets works correctly
+    auto s1 = makeWebSocket();
+    auto s2 = makeWebSocket();
+
     QSignalSpy newConnectionSpy(&server, &HttpServer::newWebSocketConnection);
-    QTRY_COMPARE(newConnectionSpy.count(), 1);
+    QTRY_COMPARE(newConnectionSpy.count(), 2);
     delete server.nextPendingWebSocketConnection();
+    delete server.nextPendingWebSocketConnection();
+    delete s1;
+    delete s2;
 #endif // defined(QT_WEBSOCKETS_LIB)
 }
 

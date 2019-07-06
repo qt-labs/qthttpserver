@@ -67,14 +67,9 @@ public:
     };
 #endif // defined(QT_WEBSOCKETS_LIB)
 
-#if !defined(QT_NO_USERDATA)
-    static QAtomicInt userDataId;
-#else
-    QHash<QTcpSocket *, QHttpServerRequest *> requests;
-#endif
-
     void handleNewConnections();
-    void handleReadyRead();
+    void handleReadyRead(QTcpSocket *socket,
+                         QHttpServerRequest *request);
 };
 
 QT_END_NAMESPACE

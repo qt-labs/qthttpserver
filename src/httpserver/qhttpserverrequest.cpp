@@ -249,12 +249,10 @@ int QHttpServerRequestPrivate::onChunkComplete(http_parser *httpParser)
 }
 
 QHttpServerRequest::QHttpServerRequest() :
-    QObjectUserData(),
     d(new QHttpServerRequestPrivate)
 {}
 
 QHttpServerRequest::QHttpServerRequest(const QHttpServerRequest &other) :
-    QObjectUserData(),
     d(other.d)
 {}
 

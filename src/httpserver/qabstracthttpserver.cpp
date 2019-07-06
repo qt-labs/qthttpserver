@@ -47,15 +47,8 @@ QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcHttpServer, "qt.httpserver")
 
-#if !defined(QT_NO_USERDATA)
-QAtomicInt QAbstractHttpServerPrivate::userDataId = -1;
-#endif
-
 QAbstractHttpServerPrivate::QAbstractHttpServerPrivate()
 {
-#if !defined(QT_NO_USERDATA)
-    userDataId.testAndSetRelaxed(-1, int(QObject::registerUserData()));
-#endif
 }
 
 void QAbstractHttpServerPrivate::handleNewConnections()
@@ -63,52 +56,47 @@ void QAbstractHttpServerPrivate::handleNewConnections()
     Q_Q(QAbstractHttpServer);
     auto tcpServer = qobject_cast<QTcpServer *>(q->sender());
     Q_ASSERT(tcpServer);
-    while (auto *socket = tcpServer->nextPendingConnection()) {
+    while (auto socket = tcpServer->nextPendingConnection()) {
         auto request = new QHttpServerRequest;  // TODO own tcp server could pre-allocate it
         http_parser_init(&request->d->httpParser, HTTP_REQUEST);
-        connect(socket, &QTcpSocket::readyRead, this, &QAbstractHttpServerPrivate::handleReadyRead);
-        socket->connect(socket, &QTcpSocket::disconnected, &QObject::deleteLater);
-#if !defined(QT_NO_USERDATA)
-        socket->setUserData(uint(userDataId), request);
-#else
-        QObject::connect(socket, &QTcpSocket::destroyed, [&]() {
-            requests.remove(socket);
+
+        QObject::connect(socket, &QTcpSocket::readyRead, q_ptr,
+                         [this, request, socket] () {
+            handleReadyRead(socket, request);
         });
-        requests.insert(socket, request);
-#endif
+
+        QObject::connect(socket, &QTcpSocket::disconnected, &QObject::deleteLater);
+        QObject::connect(socket, &QObject::destroyed, [request] () {
+            delete request;
+        });
     }
 }
 
-void QAbstractHttpServerPrivate::handleReadyRead()
+void QAbstractHttpServerPrivate::handleReadyRead(QTcpSocket *socket,
+                                                 QHttpServerRequest *request)
 {
     Q_Q(QAbstractHttpServer);
-    auto socket = qobject_cast<QTcpSocket *>(q->sender());
     Q_ASSERT(socket);
-#if !defined(QT_NO_USERDATA)
-    auto request = static_cast<QHttpServerRequest *>(socket->userData(uint(userDataId)));
-#else
-    auto request = requests[socket];
-#endif
-    auto &requestPrivate = request->d;
+    Q_ASSERT(request);
 
     if (!socket->isTransactionStarted())
         socket->startTransaction();
 
-    if (requestPrivate->state == QHttpServerRequestPrivate::State::OnMessageComplete)
-        requestPrivate->clear();
+    if (request->d->state == QHttpServerRequestPrivate::State::OnMessageComplete)
+        request->d->clear();
 
-    if (!requestPrivate->parse(socket)) {
+    if (!request->d->parse(socket)) {
         socket->disconnect();
         return;
     }
 
-    if (!requestPrivate->httpParser.upgrade &&
-            requestPrivate->state != QHttpServerRequestPrivate::State::OnMessageComplete)
+    if (!request->d->httpParser.upgrade &&
+            request->d->state != QHttpServerRequestPrivate::State::OnMessageComplete)
         return; // Partial read
 
-    if (requestPrivate->httpParser.upgrade) { // Upgrade
-        const auto &headers = requestPrivate->headers;
-        const auto upgradeHash = requestPrivate->headerHash(QByteArrayLiteral("upgrade"));
+    if (request->d->httpParser.upgrade) { // Upgrade
+        const auto &headers = request->d->headers;
+        const auto upgradeHash = request->d->headerHash(QByteArrayLiteral("upgrade"));
         const auto it = headers.find(upgradeHash);
         if (it != headers.end()) {
 #if defined(QT_WEBSOCKETS_LIB)
@@ -116,8 +104,7 @@ void QAbstractHttpServerPrivate::handleReadyRead()
                 static const auto signal = QMetaMethod::fromSignal(
                             &QAbstractHttpServer::newWebSocketConnection);
                 if (q->isSignalConnected(signal)) {
-                    disconnect(socket, &QTcpSocket::readyRead,
-                               this, &QAbstractHttpServerPrivate::handleReadyRead);
+                    QObject::disconnect(socket, &QTcpSocket::readyRead, nullptr, nullptr);
                     socket->rollbackTransaction();
                     websocketServer.handleConnection(socket);
                     Q_EMIT socket->readyRead();
