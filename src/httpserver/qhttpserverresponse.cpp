@@ -76,6 +76,12 @@ QHttpServerResponse::QHttpServerResponse(const QJsonObject &data)
 {
 }
 
+QHttpServerResponse::QHttpServerResponse(const QJsonArray &data)
+    : QHttpServerResponse(mimeApplicationJson,
+                          QJsonDocument(data).toJson(QJsonDocument::Compact))
+{
+}
+
 QHttpServerResponse::QHttpServerResponse(const QByteArray &mimeType,
                                          const QByteArray &data,
                                          const StatusCode status)

@@ -58,6 +58,7 @@ public:
     QHttpServerResponse(const QString &data);
     explicit QHttpServerResponse(const QByteArray &data);
     QHttpServerResponse(const QJsonObject &data);
+    QHttpServerResponse(const QJsonArray &data);
     QHttpServerResponse(const QByteArray &mimeType,
                         const QByteArray &data,
                         const StatusCode status = StatusCode::Ok);

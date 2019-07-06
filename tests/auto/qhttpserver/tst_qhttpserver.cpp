@@ -44,6 +44,7 @@
 #include <QtCore/qmetaobject.h>
 #include <QtCore/qjsonobject.h>
 #include <QtCore/qjsonvalue.h>
+#include <QtCore/qjsonarray.h>
 
 #include <QtNetwork/qnetworkaccessmanager.h>
 #include <QtNetwork/qnetworkreply.h>
@@ -202,6 +203,15 @@ void tst_QHttpServer::initTestCase()
         return QJsonObject{
             {"property", "test"},
             {"value", 1}
+        };
+    });
+
+    httpserver.route("/json-array/", [] () {
+        return QJsonArray{
+            1, "2",
+            QJsonObject{
+                {"name", "test"}
+            }
         };
     });
 
@@ -375,6 +385,12 @@ void tst_QHttpServer::routeGet_data()
         << 200
         << "application/json"
         << "{\"property\":\"test\",\"value\":1}";
+
+    QTest::addRow("json-array")
+        << "/json-array/"
+        << 200
+        << "application/json"
+        << "[1,\"2\",{\"name\":\"test\"}]";
 }
 
 void tst_QHttpServer::routeGet()
