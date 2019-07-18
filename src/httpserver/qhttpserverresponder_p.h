@@ -55,33 +55,9 @@ QT_BEGIN_NAMESPACE
 
 class QHttpServerResponderPrivate
 {
-    using StatusCode = QHttpServerResponder::StatusCode;
-
 public:
-    QHttpServerResponderPrivate(const QHttpServerRequest &request, QTcpSocket *const socket) :
-        request(request),
-        socket(socket)
-    {
-        const auto server = QStringLiteral("%1/%2(%3)").arg(
-                    QCoreApplication::instance()->applicationName(),
-                    QCoreApplication::instance()->applicationVersion(),
-                    QSysInfo::prettyProductName());
-        addHeader(QByteArrayLiteral("Server"), server.toUtf8());
-    }
-
-    inline bool addHeader(const QByteArray &key, const QByteArray &value)
-    {
-        const auto hash = qHash(key.toLower());
-        if (m_headers.contains(hash))
-            return false;
-        m_headers.insert(hash, qMakePair(key, value));
-        return true;
-    }
-
-    void writeStatusLine(StatusCode status = StatusCode::Ok,
-                         const QPair<quint8, quint8> &version = qMakePair(1u, 1u)) const;
-    void writeHeaders() const;
-    void writeBody(const QByteArray &body) const;
+    QHttpServerResponderPrivate(const QHttpServerRequest &request, QTcpSocket *const socket)
+        : request(request), socket(socket) {}
 
     const QHttpServerRequest &request;
 #if defined(QT_DEBUG)
@@ -89,14 +65,7 @@ public:
 #else
     QTcpSocket *const socket;
 #endif
-
-    QMap<uint, QPair<QByteArray, QByteArray>> m_headers;
-
-private:
-    void writeHeader(const QByteArray &header, const QByteArray &value) const;
-
-public:
-    const decltype(m_headers) &headers() const { return m_headers; }
+    bool bodyStarted{false};
 };
 
 QT_END_NAMESPACE

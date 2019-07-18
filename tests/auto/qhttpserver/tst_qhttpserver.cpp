@@ -215,6 +215,24 @@ void tst_QHttpServer::initTestCase()
         };
     });
 
+    httpserver.route("/chunked/", [] (QHttpServerResponder &&responder) {
+        responder.writeStatusLine(QHttpServerResponder::StatusCode::Ok);
+        responder.writeHeaders({
+                {"Content-Type", "text/plain"},
+                {"Transfer-Encoding", "chunked"} });
+
+        auto writeChunk = [&responder] (const char *message) {
+            responder.writeBody(QByteArray::number(qstrlen(message), 16));
+            responder.writeBody("\r\n");
+            responder.writeBody(message);
+            responder.writeBody("\r\n");
+        };
+
+        writeChunk("part 1 of the message, ");
+        writeChunk("part 2 of the message");
+        writeChunk("");
+    });
+
     urlBase = QStringLiteral("http://localhost:%1%2").arg(httpserver.listen());
 }
 
@@ -391,6 +409,12 @@ void tst_QHttpServer::routeGet_data()
         << 200
         << "application/json"
         << "[1,\"2\",{\"name\":\"test\"}]";
+
+    QTest::addRow("chunked")
+        << "/chunked/"
+        << 200
+        << "text/plain"
+        << "part 1 of the message, part 2 of the message";
 }
 
 void tst_QHttpServer::routeGet()

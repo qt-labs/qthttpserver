@@ -33,11 +33,15 @@
 #include <QtHttpServer/qthttpserverglobal.h>
 
 #include <QtCore/qdebug.h>
+#include <QtCore/qpair.h>
 #include <QtCore/qglobal.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qscopedpointer.h>
 #include <QtCore/qmetatype.h>
 #include <QtCore/qmimetype.h>
+
+#include <utility>
+#include <initializer_list>
 
 QT_BEGIN_NAMESPACE
 
@@ -126,38 +130,52 @@ public:
         NetworkConnectTimeoutError = 599,
     };
 
+    using HeaderList = std::initializer_list<std::pair<QByteArray, QByteArray>>;
+
     QHttpServerResponder(QHttpServerResponder &&other);
     ~QHttpServerResponder();
 
-    void write(QIODevice *data, const QByteArray &mimeType, StatusCode status = StatusCode::Ok);
+    void write(QIODevice *data,
+               HeaderList headers,
+               StatusCode status = StatusCode::Ok);
+
+    void write(QIODevice *data,
+               const QByteArray &mimeType,
+               StatusCode status = StatusCode::Ok);
+
+    void write(const QJsonDocument &document,
+               HeaderList headers,
+               StatusCode status = StatusCode::Ok);
+
+    void write(const QJsonDocument &document,
+               StatusCode status = StatusCode::Ok);
+
+    void write(const QByteArray &data,
+               HeaderList headers,
+               StatusCode status = StatusCode::Ok);
+
     void write(const QByteArray &data,
                const QByteArray &mimeType,
                StatusCode status = StatusCode::Ok);
-    void write(const QJsonDocument &document, StatusCode status = StatusCode::Ok);
+
+    void write(HeaderList headers, StatusCode status = StatusCode::Ok);
     void write(StatusCode status = StatusCode::Ok);
+
+
+    void writeStatusLine(StatusCode status = StatusCode::Ok,
+                         const QPair<quint8, quint8> &version = qMakePair(1u, 1u));
+
+    void writeHeader(const QByteArray &key, const QByteArray &value);
+    void writeHeaders(HeaderList headers);
+
+    void writeBody(const char *body, qint64 size);
+    void writeBody(const char *body);
+    void writeBody(const QByteArray &body);
 
     QTcpSocket *socket() const;
 
-    bool addHeader(const QByteArray &key, const QByteArray &value);
-
-    template <typename... Args>
-    inline void addHeaders(const QPair<QByteArray, QByteArray> &first, Args &&... others)
-    {
-        addHeader(first.first, first.second);
-        addHeaders(std::forward<Args>(others)...);
-    }
-
-    template <typename... Args>
-    inline void addHeaders(const QByteArray &key, const QByteArray &value, Args &&... others)
-    {
-        addHeader(key, value);
-        addHeaders(std::forward<Args>(others)...);
-    }
-
 private:
     QHttpServerResponder(const QHttpServerRequest &request, QTcpSocket *socket);
-
-    inline void addHeaders() {}
 
     QScopedPointer<QHttpServerResponderPrivate> d_ptr;
 };
