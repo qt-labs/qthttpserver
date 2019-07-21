@@ -29,6 +29,8 @@
 
 #include <QtHttpServer/qhttpserverresponse.h>
 
+#include <private/qhttpserverliterals_p.h>
+
 #include <QtCore/qfile.h>
 #include <QtTest/qtest.h>
 
@@ -60,7 +62,7 @@ void tst_QHttpServerResponse::mimeTypeDetection_data()
 
     QTest::addRow("text/html")
         << QFINDTESTDATA("data/text.html")
-        << QByteArrayLiteral("text/html");
+        << QHttpServerLiterals::contentTypeTextHtml();
 
     QTest::addRow("image/png")
         << QFINDTESTDATA("data/image.png")
@@ -103,7 +105,7 @@ void tst_QHttpServerResponse::mimeTypeDetectionFromFile_data()
 
     QTest::addRow("text/html")
             << QFINDTESTDATA("data/text.html")
-            << QByteArrayLiteral("text/html");
+            << QHttpServerLiterals::contentTypeTextHtml();
 
     QTest::addRow("image/png")
             << QFINDTESTDATA("data/image.png")

@@ -32,6 +32,7 @@
 #include <QtHttpServer/qhttpserverrouterrule.h>
 
 #include <private/qhttpserverrouterrule_p.h>
+#include <private/qhttpserverliterals_p.h>
 
 #include <QtTest/qtest.h>
 #include <QtTest/qsignalspy.h>
@@ -111,7 +112,8 @@ struct CustomArg {
 void tst_QHttpServer::initTestCase()
 {
     httpserver.route("/test", [] (QHttpServerResponder &&responder) {
-        responder.write("test msg", "text/html");
+        responder.write("test msg",
+                        QHttpServerLiterals::contentTypeTextHtml());
     });
 
     httpserver.route("/", QHttpServerRequest::Method::Get, [] () {
@@ -460,7 +462,8 @@ void tst_QHttpServer::routeKeepAlive()
 
     request.setUrl(urlBase.arg("/keep-alive?po=98"));
     request.setRawHeader("CustomHeader", "1");
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "text/html");
+    request.setHeader(QNetworkRequest::ContentTypeHeader,
+                      QHttpServerLiterals::contentTypeTextHtml());
 
     checkReply(networkAccessManager.post(request, QByteArray("test")),
                QString("header: 1, query: po=98, body: test, method: %1")
@@ -470,7 +473,8 @@ void tst_QHttpServer::routeKeepAlive()
 
     request = QNetworkRequest(urlBase.arg("/keep-alive"));
     request.setRawHeader(QByteArray("Connection"), QByteArray("keep-alive"));
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "text/html");
+    request.setHeader(QNetworkRequest::ContentTypeHeader,
+                      QHttpServerLiterals::contentTypeTextHtml());
 
     checkReply(networkAccessManager.post(request, QByteArray("")),
                QString("header: , query: , body: , method: %1")
@@ -543,8 +547,10 @@ void tst_QHttpServer::routePost()
 
     QNetworkAccessManager networkAccessManager;
     QNetworkRequest request(QUrl(urlBase.arg(url)));
-    if (data.size())
-        request.setHeader(QNetworkRequest::ContentTypeHeader, "text/html");
+    if (data.size()) {
+        request.setHeader(QNetworkRequest::ContentTypeHeader,
+                          QHttpServerLiterals::contentTypeTextHtml());
+    }
 
     auto reply = networkAccessManager.post(request, data.toUtf8());
 

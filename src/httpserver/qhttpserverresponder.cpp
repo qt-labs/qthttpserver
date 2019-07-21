@@ -30,6 +30,7 @@
 #include <QtHttpServer/qhttpserverresponder.h>
 #include <QtHttpServer/qhttpserverrequest.h>
 #include <private/qhttpserverresponder_p.h>
+#include <private/qhttpserverliterals_p.h>
 #include <private/qhttpserverrequest_p.h>
 #include <QtCore/qjsondocument.h>
 #include <QtCore/qloggingcategory.h>
@@ -54,13 +55,6 @@ static const std::map<QHttpServerResponder::StatusCode, QByteArray> statusString
   HTTP_STATUS_MAP(XX)
 #undef XX
 };
-
-static const QByteArray contentTypeHeader(QByteArrayLiteral("Content-Type"));
-static const QByteArray contentLengthHeader(QByteArrayLiteral("Content-Length"));
-
-static const QByteArray contentTypeEmpty(QByteArrayLiteral("application/x-empty"));
-static const QByteArray contentTypeJson(QByteArrayLiteral("text/json"));
-
 
 template <qint64 BUFFERSIZE = 512>
 struct IOChunkedTransfer
@@ -208,8 +202,10 @@ void QHttpServerResponder::write(QIODevice *data,
 
     writeStatusLine(status);
 
-    if (!input->isSequential()) // Non-sequential QIODevice should know its data size
-        writeHeader(contentLengthHeader, QByteArray::number(input->size()));
+    if (!input->isSequential()) { // Non-sequential QIODevice should know its data size
+        writeHeader(QHttpServerLiterals::contentLengthHeader(),
+                    QByteArray::number(input->size()));
+    }
 
     for (auto &&header : headers)
         writeHeader(header.first, header.second);
@@ -239,7 +235,9 @@ void QHttpServerResponder::write(QIODevice *data,
                                  const QByteArray &mimeType,
                                  StatusCode status)
 {
-    write(data, {{ contentTypeHeader, mimeType }}, status);
+    write(data,
+          {{ QHttpServerLiterals::contentTypeHeader(), mimeType }},
+          status);
 }
 
 /*!
@@ -253,9 +251,12 @@ void QHttpServerResponder::write(const QJsonDocument &document,
                                  StatusCode status)
 {
     const QByteArray &json = document.toJson();
+
     writeStatusLine(status);
-    writeHeader(contentTypeHeader, contentTypeJson);
-    writeHeader(contentLengthHeader, QByteArray::number(json.size()));
+    writeHeader(QHttpServerLiterals::contentTypeHeader(),
+                QHttpServerLiterals::contentTypeJson());
+    writeHeader(QHttpServerLiterals::contentLengthHeader(),
+                QByteArray::number(json.size()));
     writeHeaders(std::move(headers));
     writeBody(document.toJson());
 }
@@ -288,7 +289,8 @@ void QHttpServerResponder::write(const QByteArray &data,
     for (auto &&header : headers)
         writeHeader(header.first, header.second);
 
-    writeHeader(contentLengthHeader, QByteArray::number(data.size()));
+    writeHeader(QHttpServerLiterals::contentLengthHeader(),
+                QByteArray::number(data.size()));
     writeBody(data);
 }
 
@@ -300,7 +302,9 @@ void QHttpServerResponder::write(const QByteArray &data,
                                  const QByteArray &mimeType,
                                  StatusCode status)
 {
-    write(data, {{ contentTypeHeader, mimeType }}, status);
+    write(data,
+          {{ QHttpServerLiterals::contentTypeHeader(), mimeType }},
+          status);
 }
 
 /*!
@@ -310,7 +314,7 @@ void QHttpServerResponder::write(const QByteArray &data,
 */
 void QHttpServerResponder::write(StatusCode status)
 {
-    write(QByteArray(), contentTypeEmpty, status);
+    write(QByteArray(), QHttpServerLiterals::contentTypeXEmpty(), status);
 }
 
 /*!

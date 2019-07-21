@@ -30,6 +30,7 @@
 #include <QtHttpServer/qhttpserverresponse.h>
 
 #include <private/qhttpserverresponse_p.h>
+#include <private/qhttpserverliterals_p.h>
 
 #include <QtCore/qfile.h>
 #include <QtCore/qjsondocument.h>
@@ -38,20 +39,16 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace {
-
-const QByteArray mimeTextHtml("text/html");
-const QByteArray mimeApplicationJson("application/json");
-
-}
-
 QHttpServerResponse::QHttpServerResponse(QHttpServerResponse &&other)
     : d_ptr(other.d_ptr.take())
 {
 }
 
-QHttpServerResponse::QHttpServerResponse(const QHttpServerResponse::StatusCode statusCode)
-    : QHttpServerResponse(mimeTextHtml, QByteArray(), statusCode)
+QHttpServerResponse::QHttpServerResponse(
+        const QHttpServerResponse::StatusCode statusCode)
+    : QHttpServerResponse(QHttpServerLiterals::contentTypeTextHtml(),
+                          QByteArray(),
+                          statusCode)
 {
 }
 
@@ -78,13 +75,13 @@ QHttpServerResponse::QHttpServerResponse(QByteArray &&data)
 }
 
 QHttpServerResponse::QHttpServerResponse(const QJsonObject &data)
-    : QHttpServerResponse(mimeApplicationJson,
+    : QHttpServerResponse(QHttpServerLiterals::contentTypeJson(),
                           QJsonDocument(data).toJson(QJsonDocument::Compact))
 {
 }
 
 QHttpServerResponse::QHttpServerResponse(const QJsonArray &data)
-    : QHttpServerResponse(mimeApplicationJson,
+    : QHttpServerResponse(QHttpServerLiterals::contentTypeJson(),
                           QJsonDocument(data).toJson(QJsonDocument::Compact))
 {
 }

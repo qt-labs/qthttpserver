@@ -30,6 +30,8 @@
 #include <QtHttpServer/qhttpserverresponder.h>
 #include <QtHttpServer/qabstracthttpserver.h>
 
+#include <private/qhttpserverliterals_p.h>
+
 #include <QtCore/qjsondocument.h>
 #include <QtCore/qfile.h>
 #include <QtCore/qtemporaryfile.h>
@@ -95,7 +97,7 @@ void tst_QHttpServerResponder::defaultStatusCodeNoParameters()
 void tst_QHttpServerResponder::defaultStatusCodeByteArray()
 {
     HttpServer server([](QHttpServerResponder responder) {
-        responder.write(QByteArray(), QByteArrayLiteral("application/x-empty"));
+        responder.write(QByteArray(), QHttpServerLiterals::contentTypeXEmpty());
     });
     auto reply = networkAccessManager->get(QNetworkRequest(server.url));
     qWaitForFinished(reply);
@@ -159,7 +161,8 @@ void tst_QHttpServerResponder::writeJson()
     auto reply = networkAccessManager->get(QNetworkRequest(server.url));
     qWaitForFinished(reply);
     QCOMPARE(reply->error(), QNetworkReply::NoError);
-    QCOMPARE(reply->header(QNetworkRequest::ContentTypeHeader), QByteArrayLiteral("text/json"));
+    QCOMPARE(reply->header(QNetworkRequest::ContentTypeHeader),
+             QHttpServerLiterals::contentTypeJson());
     QCOMPARE(QJsonDocument::fromJson(reply->readAll()), json);
 }
 
@@ -172,7 +175,8 @@ void tst_QHttpServerResponder::writeJsonExtraHeader()
     auto reply = networkAccessManager->get(QNetworkRequest(server.url));
     qWaitForFinished(reply);
     QCOMPARE(reply->error(), QNetworkReply::NoError);
-    QCOMPARE(reply->header(QNetworkRequest::ContentTypeHeader), QByteArrayLiteral("text/json"));
+    QCOMPARE(reply->header(QNetworkRequest::ContentTypeHeader),
+             QHttpServerLiterals::contentTypeJson());
     QCOMPARE(reply->header(QNetworkRequest::ServerHeader), headerServerValue);
     QCOMPARE(QJsonDocument::fromJson(reply->readAll()), json);
 }
@@ -213,7 +217,7 @@ void tst_QHttpServerResponder::writeFile()
     QSignalSpy spyDestroyIoDevice(iodevice, &QObject::destroyed);
 
     HttpServer server([&iodevice](QHttpServerResponder responder) {
-        responder.write(iodevice, "text/html");
+        responder.write(iodevice, QHttpServerLiterals::contentTypeTextHtml());
     });
     auto reply = networkAccessManager->get(QNetworkRequest(server.url));
     QTRY_VERIFY(reply->isFinished());
@@ -229,20 +233,23 @@ void tst_QHttpServerResponder::writeFileExtraHeader()
 {
     auto file = new QFile(QFINDTESTDATA("index.html"), this);
     QSignalSpy spyDestroyIoDevice(file, &QObject::destroyed);
-    const QByteArray contentType("text/html");
 
     HttpServer server([=](QHttpServerResponder responder) {
         responder.write(
             file,
             {
-                 { "Content-Type", contentType },
+                 {
+                    QHttpServerLiterals::contentTypeHeader(),
+                    QHttpServerLiterals::contentTypeTextHtml()
+                 },
                  { headerServerString, headerServerValue }
             });
     });
     auto reply = networkAccessManager->get(QNetworkRequest(server.url));
     QTRY_VERIFY(reply->isFinished());
 
-    QCOMPARE(reply->header(QNetworkRequest::ContentTypeHeader), contentType);
+    QCOMPARE(reply->header(QNetworkRequest::ContentTypeHeader),
+                           QHttpServerLiterals::contentTypeTextHtml());
     QCOMPARE(reply->header(QNetworkRequest::ServerHeader), headerServerValue);
     QCOMPARE(reply->readAll().trimmed(), "<html></html>");
 

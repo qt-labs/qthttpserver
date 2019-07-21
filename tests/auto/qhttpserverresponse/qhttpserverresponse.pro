@@ -2,6 +2,6 @@ CONFIG += testcase
 TARGET = tst_qhttpserverresponse
 SOURCES  += tst_qhttpserverresponse.cpp
 
-QT = httpserver testlib
+QT = httpserver httpserver-private testlib
 
 TESTDATA += data/
