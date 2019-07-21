@@ -91,6 +91,7 @@ private slots:
     void routePost();
     void routeDelete_data();
     void routeDelete();
+    void routeExtraHeaders();
     void invalidRouterArguments();
     void checkRouteLambdaCapture();
 
@@ -233,6 +234,13 @@ void tst_QHttpServer::initTestCase()
         writeChunk("part 1 of the message, ");
         writeChunk("part 2 of the message");
         writeChunk("");
+    });
+
+    httpserver.route("/extra-headers", [] () {
+        QHttpServerResponse resp("");
+        resp.setHeader("Content-Type", "application/x-empty");
+        resp.setHeader("Server", "test server");
+        return resp;
     });
 
     urlBase = QStringLiteral("http://localhost:%1%2").arg(httpserver.listen());
@@ -596,6 +604,19 @@ void tst_QHttpServer::routeDelete()
 
     QCOMPARE(reply->header(QNetworkRequest::ContentTypeHeader), type);
     QCOMPARE(reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt(), code);
+}
+
+void tst_QHttpServer::routeExtraHeaders()
+{
+    QNetworkAccessManager networkAccessManager;
+    const QUrl requestUrl(urlBase.arg("/extra-headers"));
+    auto reply = networkAccessManager.get(QNetworkRequest(requestUrl));
+
+    QTRY_VERIFY(reply->isFinished());
+
+    QCOMPARE(reply->header(QNetworkRequest::ContentTypeHeader), "application/x-empty");
+    QCOMPARE(reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt(), 200);
+    QCOMPARE(reply->header(QNetworkRequest::ServerHeader), "test server");
 }
 
 struct CustomType {

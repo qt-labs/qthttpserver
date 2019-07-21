@@ -126,10 +126,7 @@ void QHttpServer::sendResponse(const QHttpServerResponse &response,
                                const QHttpServerRequest &request,
                                QTcpSocket *socket)
 {
-    auto responder = makeResponder(request, socket);
-    responder.write(response.data(),
-                    response.mimeType(),
-                    response.statusCode());
+    response.write(makeResponder(request, socket));
 }
 
 /*!

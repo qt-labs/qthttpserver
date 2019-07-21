@@ -45,6 +45,7 @@ private slots:
     void mimeTypeDetection();
     void mimeTypeDetectionFromFile_data();
     void mimeTypeDetectionFromFile();
+    void headers();
 };
 
 void tst_QHttpServerResponse::mimeTypeDetection_data()
@@ -130,6 +131,78 @@ void tst_QHttpServerResponse::mimeTypeDetectionFromFile()
     QFETCH(QByteArray, mimeType);
 
     QCOMPARE(QHttpServerResponse::fromFile(content).mimeType(), mimeType);
+}
+
+void tst_QHttpServerResponse::headers()
+{
+    QHttpServerResponse resp("");
+
+    const QByteArray test1 = QByteArrayLiteral("test1");
+    const QByteArray test2 = QByteArrayLiteral("test2");
+    const QByteArray zero = QByteArrayLiteral("application/x-zerosize");
+    const auto &contentTypeHeader = QHttpServerLiterals::contentTypeHeader();
+    const auto &contentLengthHeader = QHttpServerLiterals::contentLengthHeader();
+
+    QVERIFY(!resp.hasHeader(contentLengthHeader));
+    QVERIFY(resp.hasHeader(contentTypeHeader, zero));
+    QVERIFY(!resp.hasHeader(contentTypeHeader, test1));
+    QVERIFY(!resp.hasHeader(contentTypeHeader, test2));
+
+    resp.addHeader(contentTypeHeader, test1);
+    resp.addHeader(contentLengthHeader, test2);
+    QVERIFY(resp.hasHeader(contentLengthHeader, test2));
+    QVERIFY(resp.hasHeader(contentTypeHeader, zero));
+    QVERIFY(resp.hasHeader(contentTypeHeader, test1));
+    QVERIFY(!resp.hasHeader(contentTypeHeader, test2));
+
+    const auto &typeHeaders = resp.headers(contentTypeHeader);
+    QCOMPARE(typeHeaders.size(), 2);
+    QVERIFY(typeHeaders.contains(zero));
+    QVERIFY(typeHeaders.contains(test1));
+
+    const auto &lengthHeaders = resp.headers(contentLengthHeader);
+    QCOMPARE(lengthHeaders.size(), 1);
+    QVERIFY(lengthHeaders.contains(test2));
+
+    resp.setHeader(contentTypeHeader, test2);
+
+    QVERIFY(resp.hasHeader(contentLengthHeader, test2));
+    QVERIFY(!resp.hasHeader(contentTypeHeader, zero));
+    QVERIFY(!resp.hasHeader(contentTypeHeader, test1));
+    QVERIFY(resp.hasHeader(contentTypeHeader, test2));
+
+    resp.clearHeader(contentTypeHeader);
+
+    QVERIFY(resp.hasHeader(contentLengthHeader, test2));
+
+    resp.clearHeader(contentLengthHeader);
+
+    QVERIFY(!resp.hasHeader(contentLengthHeader));
+    QVERIFY(!resp.hasHeader(contentTypeHeader));
+
+    resp.addHeaders({ {contentTypeHeader, zero}, {contentLengthHeader, test1} });
+
+    QVERIFY(resp.hasHeader(contentTypeHeader, zero));
+    QVERIFY(resp.hasHeader(contentLengthHeader, test1));
+
+    resp.clearHeaders();
+
+    QVERIFY(!resp.hasHeader(contentLengthHeader));
+    QVERIFY(!resp.hasHeader(contentTypeHeader));
+
+    const QList<QPair<QByteArray, QByteArray>> headers = {
+      {contentTypeHeader, zero}, {contentLengthHeader, test2}
+    };
+
+    resp.addHeaders(headers);
+
+    QVERIFY(resp.hasHeader(contentTypeHeader, zero));
+    QVERIFY(resp.hasHeader(contentLengthHeader, test2));
+
+    resp.clearHeaders();
+
+    QVERIFY(!resp.hasHeader(contentLengthHeader));
+    QVERIFY(!resp.hasHeader(contentTypeHeader));
 }
 
 QT_END_NAMESPACE
