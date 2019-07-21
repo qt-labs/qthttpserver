@@ -54,14 +54,30 @@ public:
     QHttpServerResponse& operator=(QHttpServerResponse &&other) = delete;
 
     QHttpServerResponse(const StatusCode statusCode);
+
     QHttpServerResponse(const char *data);
+
     QHttpServerResponse(const QString &data);
+
     explicit QHttpServerResponse(const QByteArray &data);
+    explicit QHttpServerResponse(QByteArray &&data);
+
     QHttpServerResponse(const QJsonObject &data);
     QHttpServerResponse(const QJsonArray &data);
+
     QHttpServerResponse(const QByteArray &mimeType,
                         const QByteArray &data,
                         const StatusCode status = StatusCode::Ok);
+    QHttpServerResponse(QByteArray &&mimeType,
+                        const QByteArray &data,
+                        const StatusCode status = StatusCode::Ok);
+    QHttpServerResponse(const QByteArray &mimeType,
+                        QByteArray &&data,
+                        const StatusCode status = StatusCode::Ok);
+    QHttpServerResponse(QByteArray &&mimeType,
+                        QByteArray &&data,
+                        const StatusCode status = StatusCode::Ok);
+
     virtual ~QHttpServerResponse();
     static QHttpServerResponse fromFile(const QString &fileName);
 

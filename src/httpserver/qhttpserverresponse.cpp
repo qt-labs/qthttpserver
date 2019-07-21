@@ -56,7 +56,7 @@ QHttpServerResponse::QHttpServerResponse(const QHttpServerResponse::StatusCode s
 }
 
 QHttpServerResponse::QHttpServerResponse(const char *data)
-    : QHttpServerResponse(QByteArray(data))
+    : QHttpServerResponse(QByteArray::fromRawData(data, qstrlen(data)))
 {
 }
 
@@ -67,6 +67,13 @@ QHttpServerResponse::QHttpServerResponse(const QString &data)
 
 QHttpServerResponse::QHttpServerResponse(const QByteArray &data)
     : QHttpServerResponse(QMimeDatabase().mimeTypeForData(data).name().toLocal8Bit(), data)
+{
+}
+
+QHttpServerResponse::QHttpServerResponse(QByteArray &&data)
+    : QHttpServerResponse(
+            QMimeDatabase().mimeTypeForData(data).name().toLocal8Bit(),
+            std::move(data))
 {
 }
 
@@ -86,6 +93,31 @@ QHttpServerResponse::QHttpServerResponse(const QByteArray &mimeType,
                                          const QByteArray &data,
                                          const StatusCode status)
     : QHttpServerResponse(new QHttpServerResponsePrivate{mimeType, data, status})
+{
+}
+
+QHttpServerResponse::QHttpServerResponse(QByteArray &&mimeType,
+                                         const QByteArray &data,
+                                         const StatusCode status)
+    : QHttpServerResponse(
+            new QHttpServerResponsePrivate{std::move(mimeType), data, status})
+{
+}
+
+QHttpServerResponse::QHttpServerResponse(const QByteArray &mimeType,
+                                         QByteArray &&data,
+                                         const StatusCode status)
+    : QHttpServerResponse(
+            new QHttpServerResponsePrivate{mimeType, std::move(data), status})
+{
+}
+
+QHttpServerResponse::QHttpServerResponse(QByteArray &&mimeType,
+                                         QByteArray &&data,
+                                         const StatusCode status)
+    : QHttpServerResponse(
+            new QHttpServerResponsePrivate{std::move(mimeType), std::move(data),
+                                           status})
 {
 }
 
