@@ -46,7 +46,7 @@ QHttpServerResponse::QHttpServerResponse(QHttpServerResponse &&other)
 
 QHttpServerResponse::QHttpServerResponse(
         const QHttpServerResponse::StatusCode statusCode)
-    : QHttpServerResponse(QHttpServerLiterals::contentTypeTextHtml(),
+    : QHttpServerResponse(QHttpServerLiterals::contentTypeXEmpty(),
                           QByteArray(),
                           statusCode)
 {

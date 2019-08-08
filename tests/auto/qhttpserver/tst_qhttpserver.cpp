@@ -260,7 +260,7 @@ void tst_QHttpServer::routeGet_data()
     QTest::addRow("not found")
         << "/not-found"
         << 404
-        << "text/html"
+        << "application/x-empty"
         << "";
 
     QTest::addRow("arg:int")
@@ -284,7 +284,7 @@ void tst_QHttpServer::routeGet_data()
     QTest::addRow("arg:-uint")
         << "/page/-10/detail"
         << 404
-        << "text/html"
+        << "application/x-empty"
         << "";
 
     QTest::addRow("arg:string")
@@ -349,7 +349,7 @@ void tst_QHttpServer::routeGet_data()
     QTest::addRow("custom route rule")
         << "/custom/15"
         << 404
-        << "text/html"
+        << "application/x-empty"
         << "";
 
     QTest::addRow("custom route rule + query")
@@ -373,7 +373,7 @@ void tst_QHttpServer::routeGet_data()
     QTest::addRow("invalid-rule-method, get")
         << "/invalid-rule-method"
         << 404
-        << "text/html"
+        << "application/x-empty"
         << "";
 
     QTest::addRow("check custom type, data=1")
@@ -571,7 +571,7 @@ void tst_QHttpServer::routeDelete_data()
     QTest::addRow("post-and-get, delete")
         << "/post-and-get"
         << 404
-        << "text/html"
+        << "application/x-empty"
         << "";
 
     QTest::addRow("any, delete")
