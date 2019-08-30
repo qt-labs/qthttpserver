@@ -68,7 +68,7 @@ public:
     {
         using ViewHandler = typename VariadicTypeLast<Args...>::Type;
         using ViewTraits = QHttpServerRouterViewTraits<ViewHandler>;
-        static_assert(ViewTraits::Arguments::compileCheck(),
+        static_assert(ViewTraits::Arguments::StaticAssert,
                       "ViewHandler arguments are in the wrong order or not supported");
         return routeHelper<Rule, ViewHandler, ViewTraits>(
                 QtPrivate::makeIndexSequence<sizeof ... (Args) - 1>{},
@@ -102,7 +102,7 @@ private:
     }
 
     template<typename ViewTraits, typename T>
-    typename std::enable_if<ViewTraits::IsLastArgNonSpecial, void>::type
+    typename std::enable_if<!ViewTraits::Arguments::Last::IsSpecial::Value, void>::type
             responseImpl(T &boundViewHandler,
                          const QHttpServerRequest &request,
                          QTcpSocket *socket)
@@ -112,7 +112,7 @@ private:
     }
 
     template<typename ViewTraits, typename T>
-    typename std::enable_if<ViewTraits::IsLastArgRequest, void>::type
+    typename std::enable_if<ViewTraits::Arguments::Last::IsRequest::Value, void>::type
             responseImpl(T &boundViewHandler, const QHttpServerRequest &request, QTcpSocket *socket)
     {
         const QHttpServerResponse response(boundViewHandler(request));
@@ -120,7 +120,7 @@ private:
     }
 
     template<typename ViewTraits, typename T>
-    typename std::enable_if<ViewTraits::IsLastArgResponder, void>::type
+    typename std::enable_if<ViewTraits::Arguments::Last::IsResponder::Value, void>::type
             responseImpl(T &boundViewHandler,
                          const QHttpServerRequest &request,
                          QTcpSocket *socket)

@@ -44,181 +44,289 @@ QT_BEGIN_NAMESPACE
 class QHttpServerRequest;
 class QHttpServerResponder;
 
-template <typename ViewHandler>
-struct QHttpServerRouterViewTraits : QHttpServerRouterViewTraits<decltype(&ViewHandler::operator())> {};
+namespace QtPrivate {
 
-template <typename ClassType, typename Ret, typename ... Args>
-struct QHttpServerRouterViewTraits<Ret(ClassType::*)(Args...) const>
+template<typename T>
+struct RemoveCVRef
 {
-    static constexpr const int ArgumentCount = sizeof ... (Args);
-
-    template <int I>
-    struct Arg {
-        using OriginalType = typename std::tuple_element<I, std::tuple<Args...>>::type;
-        using Type = typename QtPrivate::RemoveConstRef<OriginalType>::Type;
-
-        static constexpr int metaTypeId() noexcept {
-            return qMetaTypeId<
-                typename std::conditional<
-                    !QMetaTypeId2<Type>::Defined,
-                    void,
-                    Type>::type>();
-        }
-    };
-
-private:
-    // Tools used to check position of special arguments (QHttpServerResponder, QHttpServerRequest)
-    // and unsupported types
-    template<bool Last, typename Arg>
-    static constexpr bool checkArgument() noexcept
-    {
-            static_assert(Last || !std::is_same<Arg, const QHttpServerRequest &>::value,
-                          "ViewHandler arguments error: "
-                          "QHttpServerRequest can only be the last argument");
-            static_assert(Last || !std::is_same<Arg, QHttpServerResponder &&>::value,
-                          "ViewHandler arguments error: "
-                          "QHttpServerResponder can only be the last argument");
-
-            static_assert(!std::is_same<Arg, QHttpServerRequest &&>::value,
-                          "ViewHandler arguments error: "
-                          "QHttpServerRequest can only be passed as a const reference");
-            static_assert(!std::is_same<Arg, QHttpServerRequest &>::value,
-                          "ViewHandler arguments error: "
-                          "QHttpServerRequest can only be passed as a const reference");
-            static_assert(!std::is_same<Arg, const QHttpServerRequest *>::value,
-                          "ViewHandler arguments error: "
-                          "QHttpServerRequest can only be passed as a const reference");
-            static_assert(!std::is_same<Arg, QHttpServerRequest const*>::value,
-                          "ViewHandler arguments error: "
-                          "QHttpServerRequest can only be passed as a const reference");
-            static_assert(!std::is_same<Arg, QHttpServerRequest *>::value,
-                          "ViewHandler arguments error: "
-                          "QHttpServerRequest can only be passed as a const reference");
-
-            static_assert(!std::is_same<Arg, QHttpServerResponder &>::value,
-                          "ViewHandler arguments error: "
-                          "QHttpServerResponder can only be passed as a universal reference");
-            static_assert(!std::is_same<Arg, const QHttpServerResponder *const>::value,
-                          "ViewHandler arguments error: "
-                          "QHttpServerResponder can only be passed as a universal reference");
-            static_assert(!std::is_same<Arg, const QHttpServerResponder *>::value,
-                          "ViewHandler arguments error: "
-                          "QHttpServerResponder can only be passed as a universal reference");
-            static_assert(!std::is_same<Arg, QHttpServerResponder const*>::value,
-                          "ViewHandler arguments error: "
-                          "QHttpServerResponder can only be passed as a universal reference");
-            static_assert(!std::is_same<Arg, QHttpServerResponder *>::value,
-                          "ViewHandler arguments error: "
-                          "QHttpServerResponder can only be passed as a universal reference");
-
-            using Type = typename std::remove_cv<typename std::remove_reference<Arg>::type>::type;
-
-            static_assert(QMetaTypeId2<Type>::Defined
-                          || std::is_same<Type, QHttpServerResponder>::value
-                          || std::is_same<Type, QHttpServerRequest>::value,
-                          "ViewHandler arguments error: "
-                          "Type is not registered, please use the Q_DECLARE_METATYPE macro "
-                          "to make it known to Qt's meta-object system");
-
-            return true;
-    }
-
-public:
-    template<typename Arg, typename ... ArgX>
-    struct ArgumentsCheck {
-        static constexpr bool compileCheck()
-        {
-            return checkArgument<false, Arg>() && ArgumentsCheck<ArgX...>::compileCheck();
-        }
-    };
-
-    template<typename Arg>
-    struct ArgumentsCheck<Arg> {
-        static constexpr bool compileCheck()
-        {
-            return checkArgument<true, Arg>();
-        }
-    };
-
-    using Arguments = ArgumentsCheck<Args...>;
-
-private:
-    // Tools used to compute ArgumentCapturableCount
-    template<typename T>
-    static constexpr typename std::enable_if<QMetaTypeId2<T>::Defined, int>::type
-            capturable()
-    { return 1; }
-
-    template<typename T>
-    static constexpr typename std::enable_if<!QMetaTypeId2<T>::Defined, int>::type
-            capturable()
-    { return 0; }
-
-    static constexpr std::size_t sum() noexcept { return 0; }
-
-    template<typename ... N>
-    static constexpr std::size_t sum(const std::size_t it, N ... n) noexcept
-    { return it + sum(n...); }
-
-public:
-    static constexpr const std::size_t ArgumentCapturableCount =
-        sum(capturable<typename QtPrivate::RemoveConstRef<Args>::Type>()...);
-    static constexpr const std::size_t ArgumentPlaceholdersCount = ArgumentCount
-            - ArgumentCapturableCount;
-
-private:
-    // Tools used to get BindableType
-    template<typename Return, typename ... ArgsX>
-    struct BindTypeHelper {
-        using Type = std::function<Return(ArgsX...)>;
-    };
-
-    template<int ... Idx>
-    static constexpr typename BindTypeHelper<
-                Ret, typename Arg<ArgumentCapturableCount + Idx>::OriginalType...>::Type
-            bindTypeHelper(QtPrivate::IndexesList<Idx...>)
-    {
-        return BindTypeHelper<Ret,
-                              typename Arg<ArgumentCapturableCount + Idx>::OriginalType...>::Type();
-    }
-
-public:
-    using BindableType = decltype(bindTypeHelper(typename QtPrivate::Indexes<
-        ArgumentPlaceholdersCount>::Value{}));
-
-    static constexpr bool IsLastArgRequest = std::is_same<
-        typename Arg<ArgumentCount - 1>::Type, QHttpServerRequest>::value;
-
-    static constexpr bool IsLastArgResponder = std::is_same<
-        typename Arg<ArgumentCount - 1>::Type, QHttpServerResponder&&>::value;
-
-    static constexpr bool IsLastArgNonSpecial = !(IsLastArgRequest || IsLastArgResponder);
+    using Type = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
 };
 
-template <typename ClassType, typename Ret>
-struct QHttpServerRouterViewTraits<Ret(ClassType::*)() const>
+
+template<bool classMember, typename ReturnT, typename ... Args>
+struct FunctionTraitsHelper
 {
-    static constexpr const int ArgumentCount = 0;
+    static constexpr const int ArgumentCount = sizeof ... (Args);
+    static constexpr const int ArgumentIndexMax = ArgumentCount - 1;
+    static constexpr const bool IsClassMember = classMember;
+    using ReturnType = ReturnT;
 
     template <int I>
     struct Arg {
-        using Type = void;
+        using Type = typename std::tuple_element<I, std::tuple<Args...>>::type;
+
+        using CleanType = typename QtPrivate::RemoveCVRef<Type>::Type;
+
+        static constexpr bool Defined = QMetaTypeId2<CleanType>::Defined;
+    };
+};
+
+template<bool classMember, typename ReturnT>
+struct FunctionTraitsHelper<classMember, ReturnT>
+{
+    static constexpr const int ArgumentCount = 0;
+    static constexpr const int ArgumentIndexMax = -1;
+    static constexpr const bool IsClassMember = classMember;
+    using ReturnType = ReturnT;
+
+    template <int I>
+    struct Arg {
+        using Type = std::false_type;
+        using CleanType = Type;
+        static constexpr bool Defined = QMetaTypeId2<CleanType>::Defined;
+    };
+};
+
+template<typename T>
+struct FunctionTraits;
+
+template<typename T>
+struct FunctionTraits : public FunctionTraits<decltype(&T::operator())>{};
+
+template<typename ReturnT, typename ... Args>
+struct FunctionTraits<ReturnT (*)(Args...)>
+    : public FunctionTraitsHelper<false, ReturnT, Args...>
+{
+};
+
+template<class ReturnT, class ClassT, class ...Args>
+struct FunctionTraits<ReturnT (ClassT::*)(Args...) const>
+    : public FunctionTraitsHelper<true, ReturnT, Args...>
+{
+    using classType = ClassT;
+};
+
+template<typename ViewHandler, bool DisableStaticAssert>
+struct ViewTraitsHelper {
+    using FunctionTraits = typename QtPrivate::FunctionTraits<ViewHandler>;
+    using ArgumentIndexes = typename QtPrivate::Indexes<FunctionTraits::ArgumentCount>::Value;
+
+    struct StaticMath {
+        template <template<typename> class Predicate, bool defaultValue>
+        struct Loop {
+            static constexpr bool eval() noexcept {
+                return defaultValue;
+            }
+
+            template<typename T, typename ... N>
+            static constexpr T eval(const T it, N ...n) noexcept {
+                return Predicate<T>::eval(it, eval(n...));
+            }
+        };
+
+        template<typename T>
+        struct SumPredicate {
+            static constexpr T eval(const T rs, const T ls) noexcept
+            {
+                return rs + ls;
+            }
+        };
+
+        template<typename T>
+        struct AndPredicate {
+            static constexpr T eval(const T rs, const T ls) noexcept
+            {
+                return rs && ls;
+            }
+        };
+
+        using Sum = Loop<SumPredicate, false>;
+        using And = Loop<AndPredicate, true>;
+        using Or = Sum;
     };
 
-    static constexpr const std::size_t ArgumentCapturableCount = 0u;
-    static constexpr const std::size_t ArgumentPlaceholdersCount = 0u;
+    struct Arguments {
+        template<int I>
+        struct StaticCheck {
+            using Arg = typename FunctionTraits::template Arg<I>;
+            using CleanType = typename Arg::CleanType;
 
-    using BindableType = decltype(std::function<Ret()>{});
+            template<typename T, bool Clean = false>
+            static constexpr bool isType() noexcept
+            {
+                using SelectedType =
+                    typename std::conditional<
+                        Clean,
+                        CleanType,
+                        typename Arg::Type
+                    >::type;
+                return std::is_same<SelectedType, T>::value;
+            }
 
-    static constexpr bool IsLastArgRequest = false;
-    static constexpr bool IsLastArgResponder = false;
-    static constexpr bool IsLastArgNonSpecial = true;
+            template<typename T>
+            struct SpecialHelper {
+                using CleanTypeT = typename QtPrivate::RemoveCVRef<T>::Type;
 
-    struct ArgumentsCheck {
-        static constexpr bool compileCheck() { return true; }
+                static constexpr bool TypeMatched = isType<CleanTypeT, true>();
+                static constexpr bool TypeCVRefMatched = isType<T>();
+                static constexpr bool ValidPosition =
+                    (I == FunctionTraits::ArgumentIndexMax);
+                static constexpr bool ValidAll = TypeCVRefMatched && ValidPosition;
+
+                static constexpr bool assertCondition =
+                    DisableStaticAssert || !TypeMatched || TypeCVRefMatched;
+
+                static constexpr bool assertConditionOrder =
+                    DisableStaticAssert || !TypeMatched || ValidPosition;
+
+                static constexpr bool staticAssert() noexcept
+                {
+                    static_assert(assertConditionOrder,
+                                  "ViewHandler arguments error: "
+                                  "QHttpServerRequest or QHttpServerResponder"
+                                  " can only be the last argument");
+                    return true;
+                }
+            };
+
+            template<typename ... T>
+            struct CheckAny {
+                static constexpr bool Value = StaticMath::Or::eval(T::Value...);
+                static constexpr bool Valid = StaticMath::Or::eval(T::Valid...);
+                static constexpr bool staticAssert() noexcept
+                {
+                    return StaticMath::Or::eval(T::staticAssert()...);
+                }
+            };
+
+            struct IsRequest {
+                using Helper = SpecialHelper<const QHttpServerRequest &>;
+                static constexpr bool Value = Helper::TypeMatched;
+                static constexpr bool Valid = Helper::ValidAll;
+
+                static constexpr bool staticAssert() noexcept
+                {
+                    static_assert(Helper::assertCondition,
+                                  "ViewHandler arguments error: "
+                                  "QHttpServerRequest can only be passed as a const reference");
+                    return Helper::staticAssert();
+                }
+            };
+
+            struct IsResponder {
+                using Helper = SpecialHelper<QHttpServerResponder &&>;
+                static constexpr bool Value = Helper::TypeMatched;
+                static constexpr bool Valid = Helper::ValidAll;
+
+                static constexpr bool staticAssert() noexcept
+                {
+                    static_assert(Helper::assertCondition,
+                                  "ViewHandler arguments error: "
+                                  "QHttpServerResponder can only be passed as a universal reference");
+                    return Helper::staticAssert();
+                }
+            };
+
+            using IsSpecial = CheckAny<IsRequest, IsResponder>;
+
+            struct IsSimple {
+                static constexpr bool Value = !IsSpecial::Value &&
+                                               I < FunctionTraits::ArgumentCount &&
+                                               FunctionTraits::ArgumentIndexMax != -1;
+                static constexpr bool Valid = Arg::Defined;
+
+                static constexpr bool assertCondition =
+                    DisableStaticAssert || !Value || Valid;
+
+                static constexpr bool staticAssert() noexcept
+                {
+                    static_assert(assertCondition,
+                                  "ViewHandler arguments error: "
+                                  "Type is not registered, please use the Q_DECLARE_METATYPE macro "
+                                  "to make it known to Qt's meta-object system");
+                    return true;
+                }
+            };
+
+            using CheckOk = CheckAny<IsSimple, IsSpecial>;
+
+            static constexpr bool Valid = CheckOk::Valid;
+            static constexpr bool StaticAssert = CheckOk::staticAssert();
+        };
+
+        template<int ... I>
+        struct ArgumentsReturn {
+            template<int Idx>
+            using Arg = StaticCheck<Idx>;
+
+            template<int Idx>
+            static constexpr int metaTypeId() noexcept
+            {
+                using Type = typename FunctionTraits::template Arg<Idx>::CleanType;
+
+                return qMetaTypeId<
+                    typename std::conditional<
+                        QMetaTypeId2<Type>::Defined,
+                        Type,
+                        void>::type>();
+            }
+
+            static constexpr std::size_t Count = FunctionTraits::ArgumentCount;
+            static constexpr std::size_t CapturableCount =
+                StaticMath::Sum::eval(
+                    static_cast<std::size_t>(FunctionTraits::template Arg<I>::Defined)...);
+            static constexpr std::size_t PlaceholdersCount = Count - CapturableCount;
+
+            static constexpr bool Valid = StaticMath::And::eval(StaticCheck<I>::Valid...);
+            static constexpr bool StaticAssert =
+                StaticMath::And::eval(StaticCheck<I>::StaticAssert...);
+
+            using Indexes = typename QtPrivate::IndexesList<I...>;
+
+            using CapturableIndexes =
+                typename QtPrivate::Indexes<CapturableCount>::Value;
+
+            using PlaceholdersIndexes =
+                typename QtPrivate::Indexes<PlaceholdersCount>::Value;
+
+            using Last = Arg<FunctionTraits::ArgumentIndexMax>;
+        };
+
+        template<int ... I>
+        static constexpr ArgumentsReturn<I...> eval(QtPrivate::IndexesList<I...>) noexcept
+        {
+            return ArgumentsReturn<I...>{};
+        }
     };
 
-    using Arguments = ArgumentsCheck;
+    template<int CaptureOffset>
+    struct BindType {
+        template<typename ... Args>
+        struct FunctionWrapper {
+            using Type = std::function<typename FunctionTraits::ReturnType (Args...)>;
+        };
+
+        template<int ... Idx>
+        static constexpr typename FunctionWrapper<
+                    typename FunctionTraits::template Arg<CaptureOffset + Idx>::Type...>::Type
+                eval(QtPrivate::IndexesList<Idx...>) noexcept
+        {
+            return FunctionWrapper<
+                typename FunctionTraits::template Arg<CaptureOffset + Idx>::Type...>::Type();
+        }
+    };
+};
+
+} // namespace QtPrivate
+
+template <typename ViewHandler, bool DisableStaticAssert = false>
+struct QHttpServerRouterViewTraits
+{
+    using Helpers = typename QtPrivate::ViewTraitsHelper<ViewHandler, DisableStaticAssert>;
+    using Arguments = decltype(Helpers::Arguments::eval(typename Helpers::ArgumentIndexes{}));
+    using BindableType = decltype(
+            Helpers::template BindType<Arguments::CapturableCount>::eval(
+                typename Arguments::PlaceholdersIndexes{}));
 };
 
 QT_END_NAMESPACE
