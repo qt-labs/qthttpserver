@@ -486,21 +486,21 @@ void tst_QHttpServerRouter::viewHandlerLastTwoSpecials()
     using Arg0 = typename Args::template Arg<0>;
     static_assert(Arg0::IsRequest::Value,
                   "viewTwoSpecialArgs: Args::Arg0::IsRequest::Value");
-    static_assert(Arg0::IsRequest::Valid == 0,
-                  "viewTwoSpecialArgs: Args::Arg0::IsRequest::Valid == 0");
+    static_assert(Arg0::IsRequest::Valid,
+                  "viewTwoSpecialArgs: Args::Arg0::IsRequest::Valid");
     static_assert(Arg0::IsResponder::Value == 0,
                   "viewTwoSpecialArgs: Args::Arg0::IsResponder::Value == 0");
     static_assert(Arg0::IsResponder::Valid == 0,
                   "viewTwoSpecialArgs: Args::Arg0::IsResponder::Valid == 0");
     static_assert(Arg0::IsSpecial::Value,
                   "viewTwoSpecialArgs: Args::Arg0::IsSpecial::Value");
-    static_assert(Arg0::IsSpecial::Valid == 0,
-                  "viewTwoSpecialArgs: Args::Arg0::IsSpecial::Valid == 0");
+    static_assert(Arg0::IsSpecial::Valid,
+                  "viewTwoSpecialArgs: Args::Arg0::IsSpecial::Valid");
     static_assert(Arg0::IsSimple::Value == 0,
                   "viewTwoSpecialArgs: Args::Arg0::IsSimple::Value == 0");
     static_assert(Arg0::IsSimple::Valid == 0,
                   "viewTwoSpecialArgs: Args::Arg0::IsSimple::Valid == 0");
-    static_assert(Arg0::Valid == 0,
+    static_assert(Arg0::Valid,
                   "viewTwoSpecialArgs: Args::Arg0::Valid");
     // StaticAssert is disabled in tests
     static_assert(Arg0::StaticAssert,
@@ -532,7 +532,7 @@ void tst_QHttpServerRouter::viewHandlerLastTwoSpecials()
     static_assert(Arg1::isType<QHttpServerResponder &&>(),
                   "viewTwoSpecialArgs: Args::Arg1::isType<QHttpServerResponder &&>()");
 
-    static_assert(Args::Valid == 0, "viewTwoSpecialArgs: Args::Valid");
+    static_assert(Args::Valid, "viewTwoSpecialArgs: Args::Valid");
     // StaticAssert is disabled in tests
     static_assert(Args::StaticAssert, "viewTwoSpecialArgs: Args::StaticAssert");
 }

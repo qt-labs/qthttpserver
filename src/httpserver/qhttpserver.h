@@ -112,7 +112,16 @@ private:
     }
 
     template<typename ViewTraits, typename T>
-    typename std::enable_if<ViewTraits::Arguments::Last::IsRequest::Value, void>::type
+    typename std::enable_if<ViewTraits::Arguments::Last::IsRequest::Value &&
+                            ViewTraits::Arguments::PlaceholdersCount == 2, void>::type
+            responseImpl(T &boundViewHandler, const QHttpServerRequest &request, QTcpSocket *socket)
+    {
+        boundViewHandler(makeResponder(request, socket), request);
+    }
+
+    template<typename ViewTraits, typename T>
+    typename std::enable_if<ViewTraits::Arguments::Last::IsRequest::Value &&
+                            ViewTraits::Arguments::PlaceholdersCount == 1, void>::type
             responseImpl(T &boundViewHandler, const QHttpServerRequest &request, QTcpSocket *socket)
     {
         const QHttpServerResponse response(boundViewHandler(request));
@@ -120,7 +129,18 @@ private:
     }
 
     template<typename ViewTraits, typename T>
-    typename std::enable_if<ViewTraits::Arguments::Last::IsResponder::Value, void>::type
+    typename std::enable_if<ViewTraits::Arguments::Last::IsResponder::Value &&
+                            ViewTraits::Arguments::PlaceholdersCount == 2, void>::type
+            responseImpl(T &boundViewHandler,
+                         const QHttpServerRequest &request,
+                         QTcpSocket *socket)
+    {
+        boundViewHandler(request, makeResponder(request, socket));
+    }
+
+    template<typename ViewTraits, typename T>
+    typename std::enable_if<ViewTraits::Arguments::Last::IsResponder::Value &&
+                            ViewTraits::Arguments::PlaceholdersCount == 1, void>::type
             responseImpl(T &boundViewHandler,
                          const QHttpServerRequest &request,
                          QTcpSocket *socket)

@@ -169,8 +169,10 @@ struct ViewTraitsHelper {
 
                 static constexpr bool TypeMatched = isType<CleanTypeT, true>();
                 static constexpr bool TypeCVRefMatched = isType<T>();
+
                 static constexpr bool ValidPosition =
-                    (I == FunctionTraits::ArgumentIndexMax);
+                    (I == FunctionTraits::ArgumentIndexMax ||
+                     I == FunctionTraits::ArgumentIndexMax - 1);
                 static constexpr bool ValidAll = TypeCVRefMatched && ValidPosition;
 
                 static constexpr bool assertCondition =

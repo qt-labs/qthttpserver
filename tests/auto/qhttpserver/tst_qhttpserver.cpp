@@ -149,6 +149,19 @@ struct CustomArg {
 
 void tst_QHttpServer::initTestCase()
 {
+
+    httpserver.route("/req-and-resp", [] (QHttpServerResponder &&resp,
+                                          const QHttpServerRequest &req) {
+        resp.write(req.body(),
+                   QHttpServerLiterals::contentTypeTextHtml());
+    });
+
+    httpserver.route("/resp-and-req", [] (const QHttpServerRequest &req,
+                                          QHttpServerResponder &&resp) {
+        resp.write(req.body(),
+                   QHttpServerLiterals::contentTypeTextHtml());
+    });
+
     httpserver.route("/test", [] (QHttpServerResponder &&responder) {
         responder.write("test msg",
                         QHttpServerLiterals::contentTypeTextHtml());
@@ -654,6 +667,20 @@ void tst_QHttpServer::routePost_data()
         << "text/plain"
         << body
         << body;
+
+    QTest::addRow("req-and-resp")
+        << urlBase.arg("/req-and-resp")
+        << 200
+        << "text/html"
+        << "test"
+        << "test";
+
+    QTest::addRow("resp-and-req")
+        << urlBase.arg("/resp-and-req")
+        << 200
+        << "text/html"
+        << "test"
+        << "test";
 
 #if QT_CONFIG(ssl)
 
