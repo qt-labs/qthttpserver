@@ -148,11 +148,20 @@ QAbstractHttpServer::QAbstractHttpServer(QAbstractHttpServerPrivate &dd, QObject
 */
 int QAbstractHttpServer::listen(const QHostAddress &address, quint16 port)
 {
+#if QT_CONFIG(ssl)
+    Q_D(QAbstractHttpServer);
+    QTcpServer *tcpServer = d->sslEnabled ? new QSslServer(d->sslConfiguration, this)
+                                          : new QTcpServer(this);
+#else
     auto tcpServer = new QTcpServer(this);
+#endif
     const auto listening = tcpServer->listen(address, port);
     if (listening) {
         bind(tcpServer);
         return tcpServer->serverPort();
+    } else {
+        qCCritical(lcHttpServer, "listen failed: %s",
+                   tcpServer->errorString().toStdString().c_str());
     }
 
     delete tcpServer;
@@ -253,5 +262,25 @@ QHttpServerResponder QAbstractHttpServer::makeResponder(const QHttpServerRequest
 {
     return QHttpServerResponder(request, socket);
 }
+
+#if QT_CONFIG(ssl)
+void QAbstractHttpServer::sslSetup(const QSslCertificate &certificate,
+                                   const QSslKey &privateKey,
+                                   QSsl::SslProtocol protocol)
+{
+    QSslConfiguration conf;
+    conf.setLocalCertificate(certificate);
+    conf.setPrivateKey(privateKey);
+    conf.setProtocol(protocol);
+    sslSetup(conf);
+}
+
+void QAbstractHttpServer::sslSetup(const QSslConfiguration &sslConfiguration)
+{
+    Q_D(QAbstractHttpServer);
+    d->sslConfiguration = sslConfiguration;
+    d->sslEnabled = true;
+}
+#endif
 
 QT_END_NAMESPACE

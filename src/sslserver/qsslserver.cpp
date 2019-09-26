@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2019 Sylvain Garcia <garcia.6l20@gmail.com>.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtHttpServer module of the Qt Toolkit.
@@ -27,56 +27,47 @@
 **
 ****************************************************************************/
 
-#ifndef QABSTRACTHTTPSERVER_P_H
-#define QABSTRACTHTTPSERVER_P_H
+#include <private/qsslserver_p.h>
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists for the convenience
-// of QHttpServer. This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-
-#include <QtHttpServer/qabstracthttpserver.h>
-#include <QtHttpServer/qthttpserverglobal.h>
-
-#include <private/qobject_p.h>
-
-#if defined(QT_WEBSOCKETS_LIB)
-#include <QtWebSockets/qwebsocketserver.h>
-#endif // defined(QT_WEBSOCKETS_LIB)
+#include <QtCore/qloggingcategory.h>
 
 QT_BEGIN_NAMESPACE
 
-class QHttpServerRequest;
+Q_LOGGING_CATEGORY(lcSS, "qt.sslserver");
 
-class Q_HTTPSERVER_EXPORT QAbstractHttpServerPrivate: public QObjectPrivate
+QSslServer::QSslServer(QObject *parent):
+    QTcpServer (QAbstractSocket::TcpSocket, *new QSslServerPrivate, parent)
 {
-    Q_DECLARE_PUBLIC(QAbstractHttpServer)
+}
 
-public:
-    QAbstractHttpServerPrivate();
+QSslServer::QSslServer(const QSslConfiguration &sslConfiguration,
+                       QObject *parent):
+    QTcpServer (QAbstractSocket::TcpSocket, *new QSslServerPrivate, parent)
+{
+    Q_D(QSslServer);
+    d->sslConfiguration = sslConfiguration;
+}
 
-#if defined(QT_WEBSOCKETS_LIB)
-    QWebSocketServer websocketServer {
-        QLatin1String("QtHttpServer"),
-        QWebSocketServer::NonSecureMode
-    };
-#endif // defined(QT_WEBSOCKETS_LIB)
+void QSslServer::incomingConnection(qintptr handle)
+{
+    Q_D(QSslServer);
+    QSslSocket *socket = new QSslSocket(this);
+    connect(socket, QOverload<const QList<QSslError>&>::of(&QSslSocket::sslErrors),
+            [this, socket](const QList<QSslError> &errors) {
+        for (auto &err: errors)
+            qCCritical(lcSS) << err;
+        Q_EMIT sslErrors(socket, errors);
+    });
+    socket->setSocketDescriptor(handle);
+    socket->setSslConfiguration(d->sslConfiguration);
+    socket->startServerEncryption();
 
-    void handleNewConnections();
-    void handleReadyRead(QTcpSocket *socket,
-                         QHttpServerRequest *request);
+    addPendingConnection(socket);
+}
 
-#if QT_CONFIG(ssl)
-    QSslConfiguration sslConfiguration;
-    bool sslEnabled = false;
-#endif
-};
-
+void QSslServer::setSslConfiguration(const QSslConfiguration &sslConfiguration)
+{
+    Q_D(QSslServer);
+    d->sslConfiguration = sslConfiguration;
+}
 QT_END_NAMESPACE
-
-#endif // QABSTRACTHTTPSERVER_P_H

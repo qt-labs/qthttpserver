@@ -4,6 +4,7 @@ INCLUDEPATH += .
 QT = network core-private
 
 qtHaveModule(websockets): QT += websockets-private
+qtConfig(ssl): QT += sslserver
 
 HEADERS += \
     qthttpserverglobal.h \

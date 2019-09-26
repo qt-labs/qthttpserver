@@ -36,6 +36,12 @@
 
 #include <QtNetwork/qhostaddress.h>
 
+#if QT_CONFIG(ssl)
+#include <QtSslServer/qsslserver.h>
+#include <QSslCertificate>
+#include <QSslKey>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 class QHttpServerRequest;
@@ -56,6 +62,12 @@ public:
 
     void bind(QTcpServer *server = nullptr);
     QVector<QTcpServer *> servers() const;
+
+#if QT_CONFIG(ssl)
+    void sslSetup(const QSslCertificate &certificate, const QSslKey &privateKey,
+                  QSsl::SslProtocol protocol = QSsl::SecureProtocols);
+    void sslSetup(const QSslConfiguration &sslConfiguration);
+#endif
 
 Q_SIGNALS:
     void missingHandler(const QHttpServerRequest &request, QTcpSocket *socket);
