@@ -99,7 +99,7 @@ private:
 
     explicit QHttpServerRequest(const QHostAddress &remoteAddress);
 
-    QHttpServerRequestPrivate *d = nullptr;
+    QSharedPointer<QHttpServerRequestPrivate> d;
 };
 
 QT_END_NAMESPACE
