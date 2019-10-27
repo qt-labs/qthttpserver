@@ -83,7 +83,7 @@ struct IOChunkedTransfer
         }))
     {
         Q_ASSERT(!source->atEnd());  // TODO error out
-        QObject::connect(sink.data(), &QObject::destroyed, source, &QObject::deleteLater);
+        QObject::connect(sink.data(), &QObject::destroyed, source.data(), &QObject::deleteLater);
         QObject::connect(source.data(), &QObject::destroyed, [this] () {
             delete this;
         });
@@ -130,7 +130,7 @@ struct IOChunkedTransfer
         beginIndex += writtenBytes;
         if (isBufferEmpty()) {
             if (source->bytesAvailable())
-                QTimer::singleShot(0, source, [this]() { readFromInput(); });
+                QTimer::singleShot(0, source.data(), [this]() { readFromInput(); });
             else if (source->atEnd()) // Finishing
                 source->deleteLater();
         }
