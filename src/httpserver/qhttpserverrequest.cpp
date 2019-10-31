@@ -38,6 +38,8 @@
 #include <QtNetwork/qsslsocket.h>
 #endif
 
+#include <array>
+
 Q_LOGGING_CATEGORY(lc, "qt.httpserver.request")
 
 QT_BEGIN_NAMESPACE
@@ -64,6 +66,16 @@ QDebug operator<<(QDebug debug, const http_parser *const httpParser)
     return debug.maybeSpace();
 }
 #endif
+
+static const std::array<void(*)(const QString &, QUrl *), UF_MAX> parseUrlFunctions {
+    [](const QString &string, QUrl *url) { url->setScheme(string); },
+    [](const QString &string, QUrl *url) { url->setHost(string); },
+    [](const QString &string, QUrl *url) { url->setPort(string.toInt()); },
+    [](const QString &string, QUrl *url) { url->setPath(string, QUrl::TolerantMode); },
+    [](const QString &string, QUrl *url) { url->setQuery(string); },
+    [](const QString &string, QUrl *url) { url->setFragment(string); },
+    [](const QString &string, QUrl *url) { url->setUserInfo(string); },
+};
 
 http_parser_settings QHttpServerRequestPrivate::httpParserSettings {
     &QHttpServerRequestPrivate::onMessageBegin,
@@ -127,28 +139,18 @@ void QHttpServerRequestPrivate::clear()
 
 bool QHttpServerRequestPrivate::parseUrl(const char *at, size_t length, bool connect, QUrl *url)
 {
-    static const std::map<std::size_t, std::function<void(const QString &, QUrl *)>> functions {
-        { UF_SCHEMA,    [](const QString &string, QUrl *url) { url->setScheme(string); } },
-        { UF_HOST,      [](const QString &string, QUrl *url) { url->setHost(string); } },
-        { UF_PORT,      [](const QString &string, QUrl *url) { url->setPort(string.toInt()); } },
-        { UF_PATH,
-          [](const QString &string, QUrl *url) { url->setPath(string, QUrl::TolerantMode); } },
-        { UF_QUERY,     [](const QString &string, QUrl *url) { url->setQuery(string); } },
-        { UF_FRAGMENT,  [](const QString &string, QUrl *url) { url->setFragment(string); } },
-        { UF_USERINFO,  [](const QString &string, QUrl *url) { url->setUserInfo(string); } },
-    };
     struct http_parser_url u;
-    if (http_parser_parse_url(at, length, connect ? 1 : 0, &u) == 0) {
-        for (auto i = 0u; i < UF_MAX; i++) {
-            if (u.field_set & (1 << i)) {
-                functions.find(i)->second(QString::fromUtf8(at + u.field_data[i].off,
-                                                            u.field_data[i].len),
-                                          url);
-            }
+    if (http_parser_parse_url(at, length, connect ? 1 : 0, &u) != 0)
+        return false;
+
+    for (auto i = 0u; i < UF_MAX; i++) {
+        if (u.field_set & (1 << i)) {
+            parseUrlFunctions[i](QString::fromUtf8(at + u.field_data[i].off,
+                                                   u.field_data[i].len),
+                                 url);
         }
-        return true;
     }
-    return false;
+    return true;
 }
 
 QHttpServerRequestPrivate *QHttpServerRequestPrivate::instance(http_parser *httpParser)
