@@ -78,9 +78,9 @@ QHttpServer::QHttpServer(QObject *parent)
     The remaining arguments are used to create a new \a Rule (the default is QHttpServerRouterRule).
     This is in turn added to the QHttpServerRouter.
 
-    \c ViewHandler can only be a lambda. The lambda definition can take an optional special argument,
-    either \c {const QHttpServerRequest&} or \c {QHttpServerResponder&&}.
-    This special argument must be the last in the parameter list.
+    \c ViewHandler can only be a lambda. The lambda definition can take two optional special
+    arguments: \c {const QHttpServerRequest&} and \c {QHttpServerResponder&&}.
+    These special arguments must be the last in the parameter list.
 
     Examples:
 
