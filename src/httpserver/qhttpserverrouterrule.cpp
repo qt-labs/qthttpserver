@@ -41,19 +41,14 @@ QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcRouterRule, "qt.httpserver.router.rule")
 
+static const auto methodEnum = QMetaEnum::fromType<QHttpServerRequest::Method>();
+
 static QHttpServerRequest::Methods strToMethods(const char *strMethods)
 {
     QHttpServerRequest::Methods methods;
 
-    static const auto index = QHttpServerRequest::staticMetaObject.indexOfEnumerator("Method");
-    if (index == -1) {
-        qCWarning(lcRouterRule, "Can not find QMetaEnum for enum Method");
-        return methods;
-    }
-
-    static const QMetaEnum en = QHttpServerRequest::staticMetaObject.enumerator(index);
     bool ok = false;
-    const int val = en.keysToValue(strMethods, &ok);
+    const int val = methodEnum.keysToValue(strMethods, &ok);
     if (ok)
         methods = static_cast<decltype(methods)>(val);
     else

@@ -185,12 +185,8 @@ void tst_QHttpServer::initTestCase()
     });
 
     httpserver.route("/any", "All", [] (const QHttpServerRequest &request) {
-        static const int index = QHttpServerRequest::staticMetaObject.indexOfEnumerator("Method");
-        if (index == -1)
-            return "Error: Could not find enum Method";
-
-        static const QMetaEnum en = QHttpServerRequest::staticMetaObject.enumerator(index);
-        return en.valueToKey(static_cast<int>(request.method()));
+        static const auto metaEnum = QMetaEnum::fromType<QHttpServerRequest::Method>();
+        return metaEnum.valueToKey(static_cast<int>(request.method()));
     });
 
     httpserver.route("/page/", [] (const qint32 number) {
