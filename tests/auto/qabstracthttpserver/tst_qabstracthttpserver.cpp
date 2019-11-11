@@ -184,8 +184,11 @@ void tst_QAbstractHttpServer::servers()
     tcpServer2->listen();
     server.bind(tcpServer2);
     QTRY_COMPARE(server.servers().count(), 2);
+    QTRY_COMPARE(server.serverPorts().count(), 2);
     QTRY_COMPARE(server.servers().first(), tcpServer);
+    QTRY_COMPARE(server.serverPorts().first(), tcpServer->serverPort());
     QTRY_COMPARE(server.servers().last(), tcpServer2);
+    QTRY_COMPARE(server.serverPorts().last(), tcpServer2->serverPort());
 }
 
 void tst_QAbstractHttpServer::fork()

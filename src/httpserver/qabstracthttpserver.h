@@ -58,7 +58,8 @@ class Q_HTTPSERVER_EXPORT QAbstractHttpServer : public QObject
 public:
     QAbstractHttpServer(QObject *parent = nullptr);
 
-    int listen(const QHostAddress &address = QHostAddress::Any, quint16 port = 0);
+    quint16 listen(const QHostAddress &address = QHostAddress::Any, quint16 port = 0);
+    QVector<quint16> serverPorts();
 
     void bind(QTcpServer *server = nullptr);
     QVector<QTcpServer *> servers() const;

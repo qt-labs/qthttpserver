@@ -144,9 +144,9 @@ QAbstractHttpServer::QAbstractHttpServer(QAbstractHttpServerPrivate &dd, QObject
 /*!
     Tries to bind a \c QTcpServer to \a address and \a port.
 
-    Returns the server port upon success, -1 otherwise.
+    Returns the server port upon success, 0 otherwise.
 */
-int QAbstractHttpServer::listen(const QHostAddress &address, quint16 port)
+quint16 QAbstractHttpServer::listen(const QHostAddress &address, quint16 port)
 {
 #if QT_CONFIG(ssl)
     Q_D(QAbstractHttpServer);
@@ -165,7 +165,26 @@ int QAbstractHttpServer::listen(const QHostAddress &address, quint16 port)
     }
 
     delete tcpServer;
-    return -1;
+    return 0;
+}
+
+/*!
+    Returns the list of ports this instance of QAbstractHttpServer
+    is listening to.
+
+    This function has the same guarantee as QObject::children,
+    the latest server added is the last entry in the vector.
+
+    \sa servers()
+*/
+QVector<quint16> QAbstractHttpServer::serverPorts()
+{
+    QVector<quint16> ports;
+    auto children = findChildren<QTcpServer *>();
+    ports.reserve(children.count());
+    std::transform(children.cbegin(), children.cend(), std::back_inserter(ports),
+                   [](const QTcpServer *server) { return server->serverPort(); });
+    return ports;
 }
 
 /*!
@@ -210,6 +229,8 @@ void QAbstractHttpServer::bind(QTcpServer *server)
 
 /*!
     Returns list of child TCP servers of this HTTP server.
+
+    \sa serverPorts()
  */
 QVector<QTcpServer *> QAbstractHttpServer::servers() const
 {

@@ -113,9 +113,9 @@ int main(int argc, char *argv[])
     });
 
     const auto port = httpServer.listen(QHostAddress::Any);
-    if (port == -1) {
+    if (!port) {
         qDebug() << QCoreApplication::translate(
-                "QHttpServerExample", "Could not run on http://127.0.0.1:%1/").arg(port);
+                "QHttpServerExample", "Server failed to listen on a port.");
         return 0;
     }
 
