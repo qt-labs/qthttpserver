@@ -35,6 +35,8 @@
 #include <QtNetwork/qtcpserver.h>
 #include <QtNetwork/qsslconfiguration.h>
 
+#include <QtCore/qscopedpointer.h>
+
 QT_BEGIN_NAMESPACE
 
 class QSslServerPrivate;
@@ -44,6 +46,7 @@ class Q_SSLSERVER_EXPORT QSslServer : public QTcpServer
 public:
     QSslServer(QObject *parent = nullptr);
     QSslServer(const QSslConfiguration &sslConfiguration, QObject *parent = nullptr);
+    ~QSslServer();
 
     void setSslConfiguration(const QSslConfiguration &sslConfiguration);
 
@@ -54,7 +57,7 @@ protected:
     void incomingConnection(qintptr handle) override final;
 
 private:
-    Q_DECLARE_PRIVATE(QSslServer)
+    QScopedPointer<QSslServerPrivate> d;
 };
 
 QT_END_NAMESPACE

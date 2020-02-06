@@ -32,11 +32,10 @@
 
 #include <QtSslServer/qsslserver.h>
 
-#include <private/qtcpserver_p.h>
-
 QT_BEGIN_NAMESPACE
 
-class QSslServerPrivate: public QTcpServerPrivate {
+class QSslServerPrivate
+{
 public:
     QSslConfiguration sslConfiguration;
 };

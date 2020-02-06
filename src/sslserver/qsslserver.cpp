@@ -36,21 +36,21 @@ QT_BEGIN_NAMESPACE
 Q_LOGGING_CATEGORY(lcSS, "qt.sslserver");
 
 QSslServer::QSslServer(QObject *parent):
-    QTcpServer (QAbstractSocket::TcpSocket, *new QSslServerPrivate, parent)
+    QTcpServer (parent), d(new QSslServerPrivate)
 {
 }
 
 QSslServer::QSslServer(const QSslConfiguration &sslConfiguration,
                        QObject *parent):
-    QTcpServer (QAbstractSocket::TcpSocket, *new QSslServerPrivate, parent)
+    QTcpServer (parent), d(new QSslServerPrivate)
 {
-    Q_D(QSslServer);
     d->sslConfiguration = sslConfiguration;
 }
 
+QSslServer::~QSslServer() = default;
+
 void QSslServer::incomingConnection(qintptr handle)
 {
-    Q_D(QSslServer);
     QSslSocket *socket = new QSslSocket(this);
     connect(socket, QOverload<const QList<QSslError>&>::of(&QSslSocket::sslErrors),
             [this, socket](const QList<QSslError> &errors) {
@@ -67,7 +67,6 @@ void QSslServer::incomingConnection(qintptr handle)
 
 void QSslServer::setSslConfiguration(const QSslConfiguration &sslConfiguration)
 {
-    Q_D(QSslServer);
     d->sslConfiguration = sslConfiguration;
 }
 QT_END_NAMESPACE

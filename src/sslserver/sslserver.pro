@@ -1,7 +1,7 @@
 TARGET = QtSslServer
 INCLUDEPATH += .
 
-QT = network network-private core-private
+QT = network core
 
 HEADERS += \
     qsslserver.h \
