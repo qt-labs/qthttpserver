@@ -2,7 +2,7 @@ requires(qtHaveModule(httpserver))
 
 TEMPLATE = app
 
-QT += httpserver
+QT = httpserver
 
 SOURCES += \
     main.cpp
