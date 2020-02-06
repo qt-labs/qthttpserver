@@ -252,7 +252,6 @@ void QHttpServerResponse::clearHeaders()
 */
 void QHttpServerResponse::setHeader(QByteArray &&name, QByteArray &&value)
 {
-    Q_D(QHttpServerResponse);
     clearHeader(name);
     addHeader(std::move(name), std::move(value));
 }
@@ -263,7 +262,6 @@ void QHttpServerResponse::setHeader(QByteArray &&name, QByteArray &&value)
 */
 void QHttpServerResponse::setHeader(QByteArray &&name, const QByteArray &value)
 {
-    Q_D(QHttpServerResponse);
     clearHeader(name);
     addHeader(std::move(name), value);
 }
@@ -274,7 +272,6 @@ void QHttpServerResponse::setHeader(QByteArray &&name, const QByteArray &value)
 */
 void QHttpServerResponse::setHeader(const QByteArray &name, QByteArray &&value)
 {
-    Q_D(QHttpServerResponse);
     clearHeader(name);
     addHeader(name, std::move(value));
 }
@@ -285,7 +282,6 @@ void QHttpServerResponse::setHeader(const QByteArray &name, QByteArray &&value)
 */
 void QHttpServerResponse::setHeader(const QByteArray &name, const QByteArray &value)
 {
-    Q_D(QHttpServerResponse);
     clearHeader(name);
     addHeader(name, value);
 }
