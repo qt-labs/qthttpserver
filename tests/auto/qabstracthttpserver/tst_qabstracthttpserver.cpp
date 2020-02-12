@@ -62,6 +62,7 @@ private slots:
     void websocket();
     void servers();
     void fork();
+    void qtbug82053();
 };
 
 void tst_QAbstractHttpServer::request_data()
@@ -242,6 +243,24 @@ void tst_QAbstractHttpServer::fork()
 #else
     QSKIP("fork() not supported by this platform");
 #endif
+}
+
+void tst_QAbstractHttpServer::qtbug82053()
+{
+    struct HttpServer : QAbstractHttpServer
+    {
+        bool handleRequest(const QHttpServerRequest &, QTcpSocket *) override { return false; }
+    } server;
+    auto tcpServer = new QTcpServer;
+    tcpServer->listen();
+    server.bind(tcpServer);
+
+    auto client = new QTcpSocket;
+    client->connectToHost(QHostAddress::LocalHost, tcpServer->serverPort());
+    client->waitForConnected();
+    client->write("CONNECT / HTTP/1.1\n\n");
+    client->waitForBytesWritten();
+    QTest::qWait(0);
 }
 
 QT_END_NAMESPACE
