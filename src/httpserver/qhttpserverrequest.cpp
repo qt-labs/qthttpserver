@@ -94,6 +94,7 @@ QHttpServerRequestPrivate::QHttpServerRequestPrivate(const QHostAddress &remoteA
     : remoteAddress(remoteAddress)
 {
     httpParser.data = this;
+    http_parser_init(&httpParser, HTTP_REQUEST);
 }
 
 QByteArray QHttpServerRequestPrivate::header(const QByteArray &key) const

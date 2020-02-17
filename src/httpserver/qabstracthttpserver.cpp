@@ -58,8 +58,6 @@ void QAbstractHttpServerPrivate::handleNewConnections()
     Q_ASSERT(tcpServer);
     while (auto socket = tcpServer->nextPendingConnection()) {
         auto request = new QHttpServerRequest(socket->peerAddress());  // TODO own tcp server could pre-allocate it
-        http_parser_init(&request->d->httpParser, HTTP_REQUEST);
-
         QObject::connect(socket, &QTcpSocket::readyRead, q_ptr,
                          [this, request, socket] () {
             handleReadyRead(socket, request);
@@ -94,30 +92,27 @@ void QAbstractHttpServerPrivate::handleReadyRead(QTcpSocket *socket,
             request->d->state != QHttpServerRequestPrivate::State::OnMessageComplete)
         return; // Partial read
 
-    if (request->d->httpParser.upgrade) { // Upgrade
-        const auto &headers = request->d->headers;
-        const auto upgradeHash = request->d->headerHash(QByteArrayLiteral("upgrade"));
-        const auto it = headers.find(upgradeHash);
-        if (it != headers.end()) {
+    if (request->d->httpParser.upgrade &&
+        request->d->httpParser.method != HTTP_CONNECT) { // Upgrade
+        const auto &upgradeValue = request->value(QByteArrayLiteral("upgrade"));
 #if defined(QT_WEBSOCKETS_LIB)
-            if (it.value().second.compare(QByteArrayLiteral("websocket"), Qt::CaseInsensitive) == 0) {
-                static const auto signal = QMetaMethod::fromSignal(
-                            &QAbstractHttpServer::newWebSocketConnection);
-                if (q->isSignalConnected(signal)) {
-                    QObject::disconnect(socket, &QTcpSocket::readyRead, nullptr, nullptr);
-                    socket->rollbackTransaction();
-                    websocketServer.handleConnection(socket);
-                    Q_EMIT socket->readyRead();
-                } else {
-                    qWarning(lcHttpServer, "WebSocket received but no slots connected to "
-                                           "QWebSocketServer::newConnection");
-                    socket->disconnectFromHost();
-                }
-                return;
+        if (upgradeValue.compare(QByteArrayLiteral("websocket"), Qt::CaseInsensitive) == 0) {
+            static const auto signal = QMetaMethod::fromSignal(
+                        &QAbstractHttpServer::newWebSocketConnection);
+            if (q->isSignalConnected(signal)) {
+                QObject::disconnect(socket, &QTcpSocket::readyRead, nullptr, nullptr);
+                socket->rollbackTransaction();
+                websocketServer.handleConnection(socket);
+                Q_EMIT socket->readyRead();
+            } else {
+                qWarning(lcHttpServer, "WebSocket received but no slots connected to "
+                                       "QWebSocketServer::newConnection");
+                socket->disconnectFromHost();
             }
-#endif
-            qCWarning(lcHttpServer, "Upgrade to %s not supported", it.value().second.constData());
+            return;
         }
+#endif
+        qCWarning(lcHttpServer, "Upgrade to %s not supported", upgradeValue.constData());
         socket->disconnectFromHost();
         return;
     }
