@@ -258,11 +258,11 @@ void tst_QAbstractHttpServer::qtbug82053()
     tcpServer->listen();
     server.bind(tcpServer);
 
-    auto client = new QTcpSocket;
-    client->connectToHost(QHostAddress::LocalHost, tcpServer->serverPort());
-    client->waitForConnected();
-    client->write("CONNECT / HTTP/1.1\n\n");
-    client->waitForBytesWritten();
+    QTcpSocket client;
+    client.connectToHost(QHostAddress::LocalHost, tcpServer->serverPort());
+    client.waitForConnected();
+    client.write("CONNECT / HTTP/1.1\n\n");
+    client.waitForBytesWritten();
     QTest::qWait(0);
 }
 
