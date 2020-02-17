@@ -291,6 +291,8 @@ QHttpServerRequest::Method QHttpServerRequest::method() const
         return QHttpServerRequest::Method::Options;
     case HTTP_PATCH:
         return QHttpServerRequest::Method::Patch;
+    case HTTP_CONNECT:
+        return QHttpServerRequest::Method::Connect;
     default:
         return QHttpServerRequest::Method::Unknown;
     }

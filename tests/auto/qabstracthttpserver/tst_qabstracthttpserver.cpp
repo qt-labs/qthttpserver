@@ -252,7 +252,12 @@ void tst_QAbstractHttpServer::qtbug82053()
 {
     struct HttpServer : QAbstractHttpServer
     {
-        bool handleRequest(const QHttpServerRequest &, QTcpSocket *) override { return false; }
+        bool wasConnectRequest{false};
+        bool handleRequest(const QHttpServerRequest &req, QTcpSocket *) override
+        {
+            wasConnectRequest = (req.method() == QHttpServerRequest::Method::Connect);
+            return false;
+        }
     } server;
     auto tcpServer = new QTcpServer;
     tcpServer->listen();
@@ -264,6 +269,8 @@ void tst_QAbstractHttpServer::qtbug82053()
     client.write("CONNECT / HTTP/1.1\n\n");
     client.waitForBytesWritten();
     QTest::qWait(0);
+    QCOMPARE(client.state(), QAbstractSocket::ConnectedState);
+    QTRY_VERIFY(server.wasConnectRequest);
 }
 
 QT_END_NAMESPACE
