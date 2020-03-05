@@ -31,6 +31,10 @@
 #include <QtHttpServer/qhttpserverrequest.h>
 #include <QtHttpServer/qhttpserverrouterrule.h>
 
+#if QT_CONFIG(concurrent)
+#  include <QtHttpServer/qhttpserverfutureresponse.h>
+#endif
+
 #include <private/qhttpserverrouterrule_p.h>
 #include <private/qhttpserverliterals_p.h>
 
@@ -296,6 +300,20 @@ void tst_QHttpServer::initTestCase()
         return std::move(resp);
     });
 
+#if QT_CONFIG(concurrent)
+    httpserver.route("/future/", [] (int id) -> QHttpServerFutureResponse {
+        if (id == 0)
+            return QHttpServerResponse::StatusCode::NotFound;
+
+        auto future = QtConcurrent::run([] () {
+            QTest::qSleep(500);
+            return QHttpServerResponse("future is coming");
+        });
+
+        return future;
+    });
+#endif
+
     quint16 port = httpserver.listen();
     if (!port)
         qCritical() << "Http server listen failed";
@@ -525,6 +543,20 @@ void tst_QHttpServer::routeGet_data()
         << 200
         << "text/plain"
         << "part 1 of the message, part 2 of the message";
+
+#if QT_CONFIG(concurrent)
+    QTest::addRow("future")
+        << urlBase.arg("/future/1")
+        << 200
+        << "text/plain"
+        << "future is coming";
+
+    QTest::addRow("future-not-found")
+        << urlBase.arg("/future/0")
+        << 404
+        << "application/x-empty"
+        << "";
+#endif
 
 #if QT_CONFIG(ssl)
 

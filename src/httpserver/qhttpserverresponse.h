@@ -118,12 +118,8 @@ public:
 
     virtual void write(QHttpServerResponder &&responder) const;
 
-private:
-    QHttpServerResponse(const QByteArray &mimeType,
-                        QHttpServerResponsePrivate *d);
-
-    QHttpServerResponse(QByteArray &&mimeType,
-                        QHttpServerResponsePrivate *d);
+protected:
+    QHttpServerResponse(QHttpServerResponsePrivate *d);
 
     QScopedPointer<QHttpServerResponsePrivate> d_ptr;
 };

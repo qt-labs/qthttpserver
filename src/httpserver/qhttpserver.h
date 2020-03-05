@@ -59,6 +59,15 @@ class Q_HTTPSERVER_EXPORT QHttpServer final : public QAbstractHttpServer
         using Type = typename VariadicTypeAt<sizeof ... (Ts) - 1, Ts...>::Type;
     };
 
+
+    template<typename T>
+    using ResponseType =
+        typename std::conditional<
+            std::is_base_of<QHttpServerResponse, T>::value,
+            T,
+            QHttpServerResponse
+        >::type;
+
 public:
     explicit QHttpServer(QObject *parent = nullptr);
     ~QHttpServer();
@@ -160,7 +169,16 @@ private:
                          const QHttpServerRequest &request,
                          QTcpSocket *socket)
     {
-        QHttpServerResponse response(boundViewHandler());
+        ResponseType<typename ViewTraits::ReturnType> response(boundViewHandler());
+        sendResponse(std::move(response), request, socket);
+    }
+
+    template<typename ViewTraits, typename T>
+    typename std::enable_if<ViewTraits::Arguments::Last::IsRequest::Value &&
+                            ViewTraits::Arguments::PlaceholdersCount == 1, void>::type
+            responseImpl(T &boundViewHandler, const QHttpServerRequest &request, QTcpSocket *socket)
+    {
+        ResponseType<typename ViewTraits::ReturnType> response(boundViewHandler(request));
         sendResponse(std::move(response), request, socket);
     }
 
@@ -170,15 +188,6 @@ private:
             responseImpl(T &boundViewHandler, const QHttpServerRequest &request, QTcpSocket *socket)
     {
         boundViewHandler(makeResponder(request, socket), request);
-    }
-
-    template<typename ViewTraits, typename T>
-    typename std::enable_if<ViewTraits::Arguments::Last::IsRequest::Value &&
-                            ViewTraits::Arguments::PlaceholdersCount == 1, void>::type
-            responseImpl(T &boundViewHandler, const QHttpServerRequest &request, QTcpSocket *socket)
-    {
-        QHttpServerResponse response(boundViewHandler(request));
-        sendResponse(std::move(response), request, socket);
     }
 
     template<typename ViewTraits, typename T>

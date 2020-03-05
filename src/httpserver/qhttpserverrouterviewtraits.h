@@ -151,6 +151,7 @@ template <typename ViewHandler, bool DisableStaticAssert = false>
 struct QHttpServerRouterViewTraits
 {
     using Helpers = typename QtPrivate::RouterViewTraitsHelper<ViewHandler, DisableStaticAssert>;
+    using ReturnType = typename Helpers::FunctionTraits::ReturnType;
     using Arguments = decltype(Helpers::Arguments::eval(typename Helpers::ArgumentIndexes{}));
     using BindableType = decltype(
             Helpers::template BindType<Arguments::CapturableCount>::eval(

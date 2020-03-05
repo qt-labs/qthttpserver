@@ -47,3 +47,10 @@ qt_extend_target(HttpServer CONDITION QT_FEATURE_ssl
     PUBLIC_LIBRARIES
         Qt::SslServer
 )
+
+qt_extend_target(HttpServer CONDITION TARGET Qt::Concurrent
+    SOURCES
+        qhttpserverfutureresponse.cpp qhttpserverfutureresponse.h
+    PUBLIC_LIBRARIES
+        Qt::Concurrent
+)

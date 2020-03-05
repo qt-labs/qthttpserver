@@ -59,10 +59,16 @@ class QHttpServerResponsePrivate
     };
 
 public:
+    explicit QHttpServerResponsePrivate() = default;
+    virtual ~QHttpServerResponsePrivate() = default;
+
+    QHttpServerResponsePrivate(QByteArray &&d, const QHttpServerResponse::StatusCode sc);
+    QHttpServerResponsePrivate(const QHttpServerResponse::StatusCode sc);
+
     QByteArray data;
     QHttpServerResponse::StatusCode statusCode;
-
     std::unordered_multimap<QByteArray, QByteArray, HashHelper> headers;
+    bool derived{false};
 };
 
 QT_END_NAMESPACE

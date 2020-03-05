@@ -37,6 +37,12 @@ SOURCES += \
     qhttpserverrouter.cpp \
     qhttpserverrouterrule.cpp
 
+qtHaveModule(concurrent) {
+    QT += concurrent
+    HEADERS += qhttpserverfutureresponse.h
+    SOURCES += qhttpserverfutureresponse.cpp
+}
+
 include(../3rdparty/http-parser.pri)
 
 load(qt_module)
