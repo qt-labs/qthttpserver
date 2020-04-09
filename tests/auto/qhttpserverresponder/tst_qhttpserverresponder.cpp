@@ -189,7 +189,7 @@ void tst_QHttpServerResponder::writeFile_data()
     QTest::addColumn<QString>("data");
 
     QTest::addRow("index.html")
-        << qobject_cast<QIODevice *>(new QFile(QFINDTESTDATA("index.html"), this))
+        << qobject_cast<QIODevice *>(new QFile(QFINDTESTDATA("data/index.html"), this))
         << 200
         << "text/html"
         << "<html></html>";
@@ -231,7 +231,7 @@ void tst_QHttpServerResponder::writeFile()
 
 void tst_QHttpServerResponder::writeFileExtraHeader()
 {
-    auto file = new QFile(QFINDTESTDATA("index.html"), this);
+    auto file = new QFile(QFINDTESTDATA("data/index.html"), this);
     QSignalSpy spyDestroyIoDevice(file, &QObject::destroyed);
 
     HttpServer server([=](QHttpServerResponder responder) {

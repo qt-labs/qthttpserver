@@ -4,4 +4,4 @@ SOURCES  += tst_qhttpserverresponder.cpp
 
 QT = httpserver httpserver-private testlib
 
-TESTDATA += *.html
+TESTDATA += data/

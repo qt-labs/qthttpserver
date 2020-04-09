@@ -30,7 +30,7 @@
 #include <QtHttpServer/qabstracthttpserver.h>
 
 #if defined(QT_WEBSOCKETS_LIB)
-#include <QtWebSockets/qwebsocket.h>
+#  include <QtWebSockets/qwebsocket.h>
 #endif
 
 #include <QtTest/qsignalspy.h>
@@ -45,8 +45,8 @@
 #include <QtHttpServer/qhttpserverrequest.h>
 
 #if defined(Q_OS_UNIX)
-#   include <signal.h>
-#   include <unistd.h>
+#  include <signal.h>
+#  include <unistd.h>
 #endif
 
 QT_BEGIN_NAMESPACE
