@@ -48,7 +48,7 @@ class Q_HTTPSERVER_EXPORT QHttpServerRouterRule
     Q_DECLARE_PRIVATE(QHttpServerRouterRule)
 
 public:
-    using RouterHandler = std::function<void(QRegularExpressionMatch &,
+    using RouterHandler = std::function<void(const QRegularExpressionMatch &,
                                              const QHttpServerRequest &,
                                              QTcpSocket *)>;
 

@@ -89,7 +89,7 @@ private:
     bool routeImpl(Args &&...args, ViewHandler &&viewHandler)
     {
         auto routerHandler = [this, viewHandler] (
-                    QRegularExpressionMatch &match,
+                    const QRegularExpressionMatch &match,
                     const QHttpServerRequest &request,
                     QTcpSocket *socket) mutable {
             auto boundViewHandler = router()->bindCaptured<ViewHandler, ViewTraits>(

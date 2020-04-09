@@ -95,9 +95,9 @@ public:
     void addHeaders(QHttpServerResponder::HeaderList headers);
 
     template<typename Container>
-    void addHeaders(const Container &headers)
+    void addHeaders(const Container &headerList)
     {
-        for (const auto &header : headers)
+        for (const auto &header : headerList)
             addHeader(header.first, header.second);
     }
 

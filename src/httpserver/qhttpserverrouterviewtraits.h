@@ -308,14 +308,12 @@ struct ViewTraitsHelper {
             using Type = std::function<typename FunctionTraits::ReturnType (Args...)>;
         };
 
+        template<int Id>
+        using OffsetArg = typename FunctionTraits::template Arg<CaptureOffset + Id>::Type;
+
         template<int ... Idx>
-        static constexpr typename FunctionWrapper<
-                    typename FunctionTraits::template Arg<CaptureOffset + Idx>::Type...>::Type
-                eval(QtPrivate::IndexesList<Idx...>) noexcept
-        {
-            return FunctionWrapper<
-                typename FunctionTraits::template Arg<CaptureOffset + Idx>::Type...>::Type();
-        }
+        static constexpr typename FunctionWrapper<OffsetArg<Idx>...>::Type
+                eval(QtPrivate::IndexesList<Idx...>) noexcept;
     };
 };
 

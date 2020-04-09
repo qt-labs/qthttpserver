@@ -102,7 +102,7 @@ public:
 
     template<typename ViewHandler, typename ViewTraits = QHttpServerRouterViewTraits<ViewHandler>>
     typename ViewTraits::BindableType bindCaptured(ViewHandler &&handler,
-                      QRegularExpressionMatch &match) const
+                      const QRegularExpressionMatch &match) const
     {
         return bindCapturedImpl<ViewHandler, ViewTraits>(
                 std::forward<ViewHandler>(handler),
@@ -127,13 +127,26 @@ private:
     bool addRuleImpl(QHttpServerRouterRule *rule,
                      const std::initializer_list<int> &metaTypes);
 
+    // template<typename ViewHandler, typename ViewTraits, int ... Cx, int ... Px>
+    // typename ViewTraits::BindableType bindCapturedImpl(ViewHandler &&handler,
+                          // const QRegularExpressionMatch &match,
+                          // QtPrivate::IndexesList<Cx...>,
+                          // QtPrivate::IndexesList<Px...>) const
+    // {
+        // return std::bind(
+                // std::forward<ViewHandler>(handler),
+                // QVariant(match.captured(Cx + 1))
+                    // .value<typename ViewTraits::Arguments::template Arg<Cx>::CleanType>()...,
+                // QtPrivate::QHttpServerRouterPlaceholder<Px>{}...);
+    // }
+
     template<typename ViewHandler, typename ViewTraits, int ... Cx, int ... Px>
-    typename ViewTraits::BindableType bindCapturedImpl(ViewHandler &&handler,
-                          QRegularExpressionMatch &match,
+    typename std::enable_if<ViewTraits::Arguments::CapturableCount != 0, typename ViewTraits::BindableType>::type
+            bindCapturedImpl(ViewHandler &&handler,
+                          const QRegularExpressionMatch &match,
                           QtPrivate::IndexesList<Cx...>,
                           QtPrivate::IndexesList<Px...>) const
     {
-
         return std::bind(
                 std::forward<ViewHandler>(handler),
                 QVariant(match.captured(Cx + 1))
@@ -141,6 +154,17 @@ private:
                 QtPrivate::QHttpServerRouterPlaceholder<Px>{}...);
     }
 
+    template<typename ViewHandler, typename ViewTraits, int ... Cx, int ... Px>
+    typename std::enable_if<!ViewTraits::Arguments::CapturableCount, typename ViewTraits::BindableType>::type
+            bindCapturedImpl(ViewHandler &&handler,
+                          const QRegularExpressionMatch &,
+                          QtPrivate::IndexesList<Cx...>,
+                          QtPrivate::IndexesList<Px...>) const
+    {
+        return std::bind(
+                std::forward<ViewHandler>(handler),
+                QtPrivate::QHttpServerRouterPlaceholder<Px>{}...);
+    }
 
     QScopedPointer<QHttpServerRouterPrivate> d_ptr;
 };

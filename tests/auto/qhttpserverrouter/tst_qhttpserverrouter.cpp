@@ -57,7 +57,7 @@ struct HttpServer : QAbstractHttpServer {
     void route(const char *path, const QHttpServerRequest::Methods methods, ViewHandler &&viewHandler)
     {
         auto rule = new QHttpServerRouterRule(
-                path, methods, [this, &viewHandler] (QRegularExpressionMatch &match,
+                path, methods, [this, &viewHandler] (const QRegularExpressionMatch &match,
                                                      const QHttpServerRequest &request,
                                                      QTcpSocket *socket) {
             auto boundViewHandler = router.bindCaptured<ViewHandler>(
