@@ -283,7 +283,6 @@ void QHttpServerResponder::write(const QByteArray &data,
                                  HeaderList headers,
                                  StatusCode status)
 {
-    Q_D(QHttpServerResponder);
     writeStatusLine(status);
 
     for (auto &&header : headers)
