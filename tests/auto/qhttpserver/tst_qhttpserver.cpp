@@ -808,18 +808,21 @@ struct CustomType {
 
 void tst_QHttpServer::invalidRouterArguments()
 {
+    QTest::ignoreMessage(QtWarningMsg, "Can not find converter for type: QDateTime");
     QCOMPARE(
         httpserver.route("/datetime/", [] (const QDateTime &datetime) {
             return QString("datetime: %1").arg(datetime.toString());
         }),
         false);
 
+    QTest::ignoreMessage(QtWarningMsg, "Can not convert GeT to QHttpServerRequest::Method");
     QCOMPARE(
         httpserver.route("/invalid-rule-method", "GeT", [] () {
             return "";
         }),
         false);
 
+    QTest::ignoreMessage(QtWarningMsg, "Can not convert Garbage to QHttpServerRequest::Method");
     QCOMPARE(
         httpserver.route("/invalid-rule-method", "Garbage", [] () {
             return "";
@@ -832,6 +835,9 @@ void tst_QHttpServer::invalidRouterArguments()
         }),
         false);
 
+    QTest::ignoreMessage(QtWarningMsg,
+                         "CustomType has not registered a converter to QString. "
+                         "Use QHttpServerRouter::addConveter<Type>(converter).");
     QCOMPARE(
         httpserver.route("/implicit-conversion-to-qstring-has-no-registered/",
                          [] (const CustomType &) {

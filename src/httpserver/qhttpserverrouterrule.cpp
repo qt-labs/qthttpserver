@@ -237,7 +237,7 @@ bool QHttpServerRouterRule::createPathRegexp(const std::initializer_list<int> &m
 
         auto it = converters.constFind(type);
         if (it == converters.end()) {
-            qCWarning(lcRouterRule) << "can not find converter for type:"
+            qCWarning(lcRouterRule) << "Can not find converter for type:"
                                     << QMetaType::typeName(type);
             return false;
         }
