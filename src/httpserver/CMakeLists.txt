@@ -16,6 +16,8 @@ qt_add_module(HttpServer
         qhttpserverrouter.cpp qhttpserverrouter.h qhttpserverrouter_p.h
         qhttpserverrouterrule.cpp qhttpserverrouterrule.h qhttpserverrouterrule_p.h
         qhttpserverrouterviewtraits.h
+        qhttpserverviewtraits.h
+        qhttpserverviewtraits_impl.h
         qthttpserverglobal.h
     INCLUDE_DIRECTORIES
         .
@@ -44,11 +46,4 @@ qt_extend_target(HttpServer CONDITION TARGET Qt::WebSockets
 qt_extend_target(HttpServer CONDITION QT_FEATURE_ssl
     PUBLIC_LIBRARIES
         Qt::SslServer
-)
-
-qt_extend_target(HttpServer CONDITION TARGET Qt::Concurrent
-    SOURCES
-        qhttpserverfutureresponse.cpp qhttpserverfutureresponse.h
-    PUBLIC_LIBRARIES
-        Qt::Concurrent
 )

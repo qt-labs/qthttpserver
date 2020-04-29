@@ -252,8 +252,8 @@ void tst_QHttpServerRouter::viewHandlerNoArg()
                   "viewOneArg: Args::Last::Valid");
     static_assert(Args::Last::StaticAssert,
                   "viewOneArg: Args::Last::StaticAssert");
-    static_assert(Args::Last::isType<std::false_type>(),
-                  "viewNonArg: Args::Last::isType<std::false_type>()");
+    static_assert(std::is_same<Args::Last::Type, std::false_type>::value,
+                  "viewNonArg: std::is_same<Args::Last::Type, std::false_type>");
 
     using Arg1 = typename Args::template Arg<1>;
     static_assert(Arg1::IsRequest::Value == 0,
@@ -272,8 +272,8 @@ void tst_QHttpServerRouter::viewHandlerNoArg()
                   "viewOneArg: Args::Arg<1>::Valid");
     static_assert(Arg1::StaticAssert,
                   "viewOneArg: Args::Arg<1>::Valid::StaticAssert");
-    static_assert(Arg1::isType<std::false_type>(),
-                  "viewNonArg: Args::Arg<1>::isType<std::false_type>()");
+    static_assert(std::is_same<Arg1::Type, std::false_type>::value,
+                  "viewNonArg: std::is_same<Args::Arg<1>::Type, std::false_type>");
 
     static_assert(Args::Valid, "viewNonArg: Args::Valid");
     static_assert(Args::StaticAssert, "viewNonArg: Args::StaticAssert");
@@ -313,8 +313,8 @@ void tst_QHttpServerRouter::viewHandlerOneArg()
                   "viewOneArg: Args::Last::Valid");
     static_assert(Args::Last::StaticAssert,
                   "viewOneArg: Args::Last::StaticAssert");
-    static_assert(Args::Last::isType<const quint64 &>(),
-                  "viewNonArg: Args::Last::isType<const quint64 &>()");
+    static_assert(std::is_same<Args::Last::Type, const quint64 &>::value,
+                  "viewNonArg: std::is_same<Args::Last::Type, const quint64 &>");
     static_assert(Args::Valid, "viewOneArg: Args::Valid");
     static_assert(Args::StaticAssert, "viewOneArg: Args::StaticAssert");
 }
@@ -355,8 +355,8 @@ void tst_QHttpServerRouter::viewHandlerTwoArgs()
                   "viewTwoArgs: Args::Arg0::Valid");
     static_assert(Arg0::StaticAssert,
                   "viewTwoArgs: Args::Arg0::StaticAssert");
-    static_assert(Arg0::isType<const quint64 &>(),
-                  "viewNonArg: Args::Arg0::isType<const quint64>()");
+    static_assert(std::is_same<Arg0::Type, const quint64 &>::value,
+                  "viewNonArg: std::is_same<Args::Arg0::Type, const quint64>");
 
     using Arg1 = typename Args::template Arg<1>;
     static_assert(Arg1::IsRequest::Value == 0,
@@ -380,8 +380,8 @@ void tst_QHttpServerRouter::viewHandlerTwoArgs()
     // StaticAssert is disabled in tests
     static_assert(Arg1::StaticAssert,
                   "viewOneArg: Args::Arg1::StaticAssert");
-    static_assert(Arg1::isType<const QHttpServerResponder &>(),
-                  "viewTwoArgs: Args::Arg1::isType<const QHttpServerResponder &>>()");
+    static_assert(std::is_same<Arg1::Type, const QHttpServerResponder &>::value,
+                  "viewTwoArgs: std::is_same<Args::Arg1::Type, const QHttpServerResponder &>)");
 
     static_assert(Args::Valid == 0, "viewTwoArgs: Args::Valid == 0");
     // StaticAssert is disabled in tests
@@ -422,8 +422,8 @@ void tst_QHttpServerRouter::viewHandlerResponder()
                   "viewResponder: Args::Last::Valid");
     static_assert(Args::Last::StaticAssert,
                   "viewResponder: Args::Last::StaticAssert");
-    static_assert(Args::Last::isType<QHttpServerResponder &&>(),
-                  "viewNonArg: Args::Last::isType<QHttpServerResponder &&>()");
+    static_assert(std::is_same<Args::Last::Type, QHttpServerResponder &&>::value,
+                  "viewNonArg: std::is_same<Args::Last::Type, QHttpServerResponder &&>");
     static_assert(Args::Valid, "viewResponder: Args::Valid");
     static_assert(Args::StaticAssert, "viewResponder: Args::StaticAssert");
 }
@@ -462,8 +462,8 @@ void tst_QHttpServerRouter::viewHandlerRequest()
                   "viewResponder: Args::Last::Valid");
     static_assert(Args::Last::StaticAssert,
                   "viewResponder: Args::Last::StaticAssert");
-    static_assert(Args::Last::isType<const QHttpServerRequest &>(),
-                  "viewNonArg: Args::Last::isType<const QHttpServerRequest &>()");
+    static_assert(std::is_same<Args::Last::Type, const QHttpServerRequest &>::value,
+                  "viewNonArg: std::is_same<Args::Last::Type, const QHttpServerRequest &>");
     static_assert(Args::Valid, "viewResponder: Args::Valid");
     static_assert(Args::StaticAssert, "viewResponder: Args::StaticAssert");
 }
@@ -505,8 +505,8 @@ void tst_QHttpServerRouter::viewHandlerLastTwoSpecials()
     // StaticAssert is disabled in tests
     static_assert(Arg0::StaticAssert,
                   "viewTwoSpecialArgs: Args::Arg0::StaticAssert");
-    static_assert(Arg0::isType<const QHttpServerRequest &>(),
-                  "viewNonArg: Args::Arg0::isType<const QHttpServerRequest &>()");
+    static_assert(std::is_same<Arg0::Type, const QHttpServerRequest &>::value,
+                  "viewNonArg: std::is_same<Args::Arg0::Type, const QHttpServerRequest &>");
 
     using Arg1 = typename Args::template Arg<1>;
     static_assert(Arg1::IsRequest::Value == 0,
@@ -529,8 +529,8 @@ void tst_QHttpServerRouter::viewHandlerLastTwoSpecials()
                   "viewTwoSpecialArgs: Args::Arg1::Valid");
     static_assert(Arg1::StaticAssert,
                   "viewTwoSpecialArgs: Args::Arg1::StaticAssert");
-    static_assert(Arg1::isType<QHttpServerResponder &&>(),
-                  "viewTwoSpecialArgs: Args::Arg1::isType<QHttpServerResponder &&>()");
+    static_assert(std::is_same<Arg1::Type, QHttpServerResponder &&>::value,
+                  "viewTwoSpecialArgs: std::is_same<Args::Arg1::Type, QHttpServerResponder &&>");
 
     static_assert(Args::Valid, "viewTwoSpecialArgs: Args::Valid");
     // StaticAssert is disabled in tests

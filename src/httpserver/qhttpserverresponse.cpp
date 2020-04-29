@@ -40,9 +40,18 @@
 
 QT_BEGIN_NAMESPACE
 
-QHttpServerResponse::QHttpServerResponse(QHttpServerResponse &&other)
+QHttpServerResponse::QHttpServerResponse(QHttpServerResponse &&other) noexcept
     : d_ptr(other.d_ptr.take())
 {
+}
+
+QHttpServerResponse& QHttpServerResponse::operator=(QHttpServerResponse &&other) noexcept
+{
+    if (this == &other)
+        return *this;
+
+    qSwap(d_ptr, other.d_ptr);
+    return *this;
 }
 
 QHttpServerResponse::QHttpServerResponse(

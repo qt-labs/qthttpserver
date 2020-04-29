@@ -129,6 +129,7 @@ private slots:
     void routeExtraHeaders();
     void invalidRouterArguments();
     void checkRouteLambdaCapture();
+    void afterRequest();
 
 private:
     void checkReply(QNetworkReply *reply, const QString &response);
@@ -287,6 +288,10 @@ void tst_QHttpServer::initTestCase()
         resp.setHeader("Content-Type", "application/x-empty");
         resp.setHeader("Server", "test server");
         return resp;
+    });
+
+    httpserver.afterRequest([] (QHttpServerResponse &&resp) {
+        return std::move(resp);
     });
 
     quint16 port = httpserver.listen();
@@ -868,6 +873,36 @@ void tst_QHttpServer::checkRouteLambdaCapture()
                msg);
     if (QTest::currentTestFailed())
         return;
+}
+
+void tst_QHttpServer::afterRequest()
+{
+    httpserver.afterRequest([] (QHttpServerResponse &&resp,
+                                const QHttpServerRequest &request) {
+        if (request.url().path() == "/test-after-request")
+            resp.setHeader("Arguments-Order-1", "resp, request");
+
+        return std::move(resp);
+    });
+
+    httpserver.afterRequest([] (const QHttpServerRequest &request,
+                                QHttpServerResponse &&resp) {
+        if (request.url().path() == "/test-after-request")
+            resp.setHeader("Arguments-Order-2", "request, resp");
+
+        return std::move(resp);
+    });
+
+    const QUrl requestUrl(urlBase.arg("/test-after-request"));
+    auto reply = networkAccessManager.get(QNetworkRequest(requestUrl));
+
+    QTRY_VERIFY(reply->isFinished());
+
+    QCOMPARE(reply->header(QNetworkRequest::ContentTypeHeader), "application/x-empty");
+    QCOMPARE(reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt(), 404);
+    QCOMPARE(reply->rawHeader("Arguments-Order-1"), "resp, request");
+    QCOMPARE(reply->rawHeader("Arguments-Order-2"), "request, resp");
+    reply->deleteLater();
 }
 
 void tst_QHttpServer::checkReply(QNetworkReply *reply, const QString &response) {

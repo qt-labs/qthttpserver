@@ -66,8 +66,7 @@ QHttpServer::QHttpServer(QObject *parent)
     connect(this, &QAbstractHttpServer::missingHandler, this,
             [=] (const QHttpServerRequest &request, QTcpSocket *socket) {
         qCDebug(lcHS) << tr("missing handler:") << request.url().path();
-        sendResponse(
-                QHttpServerResponse(QHttpServerResponder::StatusCode::NotFound), request, socket);
+        sendResponse(QHttpServerResponder::StatusCode::NotFound, request, socket);
     });
 }
 
@@ -103,6 +102,40 @@ QHttpServer::QHttpServer(QObject *parent)
     \sa QHttpServerRouter::addRule
 */
 
+/*! \fn template<typename ViewHandler> void afterRequest(ViewHandler &&viewHandler)
+    Register a function to be run after each request.
+
+    \c ViewHandler can only be a lambda. The lambda definition can take two
+    arguments: \c {QHttpServerResponse &&} and \c {const QHttpServerRequest&} (optional).
+
+    Examples:
+
+    \code
+
+    QHttpServer server;
+
+    // Valid:
+    server.afterRequest([] (QHttpServerResponse &&resp, const QHttpServerRequest &request) {
+        return std::move(resp);
+    }
+    server.afterRequest([] (const QHttpServerRequest &request, QHttpServerResponse &&resp) {
+        return std::move(resp);
+    }
+    server.afterRequest([] (QHttpServerResponse &&resp) { return std::move(resp); }
+
+    // Invalid (compile time error):
+    // resp must be passed by universal reference
+    server.afterRequest([] (QHttpServerResponse &resp, const QHttpServerRequest &request) {
+        return std::move(resp);
+    }
+    // request must be passed by const reference
+    server.afterRequest([] (QHttpServerResponse &&resp, QHttpServerRequest &request) {
+        return std::move(resp);
+    }
+
+    \endcode
+*/
+
 /*!
     Destroys a QHttpServer.
 */
@@ -119,13 +152,22 @@ QHttpServerRouter *QHttpServer::router()
     return &d->router;
 }
 
+void QHttpServer::afterRequestImpl(AfterRequestHandler &&afterRequestHandler)
+{
+    Q_D(QHttpServer);
+    d->afterRequestHandlers.push_back(std::move(afterRequestHandler));
+}
+
 /*!
     \internal
 */
-void QHttpServer::sendResponse(const QHttpServerResponse &response,
+void QHttpServer::sendResponse(QHttpServerResponse &&response,
                                const QHttpServerRequest &request,
                                QTcpSocket *socket)
 {
+    Q_D(QHttpServer);
+    for (auto afterRequestHandler : d->afterRequestHandlers)
+        response = std::move(afterRequestHandler(std::move(response), request));
     response.write(makeResponder(request, socket));
 }
 

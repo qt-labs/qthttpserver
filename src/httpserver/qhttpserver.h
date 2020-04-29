@@ -1,5 +1,6 @@
 /****************************************************************************
 **
+** Copyright (C) 2020 Mikhail Svetkin <mikhail.svetkin@gmail.com>
 ** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
@@ -35,6 +36,7 @@
 #include <QtHttpServer/qhttpserverrouterrule.h>
 #include <QtHttpServer/qhttpserverresponse.h>
 #include <QtHttpServer/qhttpserverrouterviewtraits.h>
+#include <QtHttpServer/qhttpserverviewtraits.h>
 
 #include <tuple>
 
@@ -75,6 +77,57 @@ public:
                 std::forward<Args>(args)...);
     }
 
+    template<typename ViewHandler>
+    void afterRequest(ViewHandler &&viewHandler)
+    {
+        using ViewTraits = QHttpServerAfterRequestViewTraits<ViewHandler>;
+        static_assert(ViewTraits::Arguments::StaticAssert,
+                      "ViewHandler arguments are in the wrong order or not supported");
+        afterRequestHelper<ViewTraits, ViewHandler>(std::move(viewHandler));
+    }
+
+    using AfterRequestHandler =
+        std::function<QHttpServerResponse(QHttpServerResponse &&response,
+                      const QHttpServerRequest &request)>;
+private:
+    template<typename ViewTraits, typename ViewHandler>
+    typename std::enable_if<ViewTraits::Arguments::Last::IsRequest::Value &&
+                            ViewTraits::Arguments::Count == 2, void>::type
+            afterRequestHelper(ViewHandler &&viewHandler) {
+        auto handler = [viewHandler](QHttpServerResponse &&resp,
+                                     const QHttpServerRequest &request) {
+            return std::move(viewHandler(std::move(resp), request));
+        };
+
+        afterRequestImpl(std::move(handler));
+    }
+
+    template<typename ViewTraits, typename ViewHandler>
+    typename std::enable_if<ViewTraits::Arguments::Last::IsResponse::Value &&
+                            ViewTraits::Arguments::Count == 1, void>::type
+            afterRequestHelper(ViewHandler &&viewHandler) {
+        auto handler = [viewHandler](QHttpServerResponse &&resp,
+                                     const QHttpServerRequest &) {
+            return std::move(viewHandler(std::move(resp)));
+        };
+
+        afterRequestImpl(std::move(handler));
+    }
+
+    template<typename ViewTraits, typename ViewHandler>
+    typename std::enable_if<ViewTraits::Arguments::Last::IsResponse::Value &&
+                            ViewTraits::Arguments::Count == 2, void>::type
+            afterRequestHelper(ViewHandler &&viewHandler) {
+        auto handler = [viewHandler](QHttpServerResponse &&resp,
+                                     const QHttpServerRequest &request) {
+            return std::move(viewHandler(request, std::move(resp)));
+        };
+
+        afterRequestImpl(std::move(handler));
+    }
+
+    void afterRequestImpl(AfterRequestHandler &&afterRequestHandler);
+
 private:
     template<typename Rule, typename ViewHandler, typename ViewTraits, int ... I, typename ... Args>
     bool routeHelper(QtPrivate::IndexesList<I...>, Args &&... args)
@@ -107,8 +160,8 @@ private:
                          const QHttpServerRequest &request,
                          QTcpSocket *socket)
     {
-        const QHttpServerResponse response(boundViewHandler());
-        sendResponse(response, request, socket);
+        QHttpServerResponse response(boundViewHandler());
+        sendResponse(std::move(response), request, socket);
     }
 
     template<typename ViewTraits, typename T>
@@ -124,8 +177,8 @@ private:
                             ViewTraits::Arguments::PlaceholdersCount == 1, void>::type
             responseImpl(T &boundViewHandler, const QHttpServerRequest &request, QTcpSocket *socket)
     {
-        const QHttpServerResponse response(boundViewHandler(request));
-        sendResponse(response, request, socket);
+        QHttpServerResponse response(boundViewHandler(request));
+        sendResponse(std::move(response), request, socket);
     }
 
     template<typename ViewTraits, typename T>
@@ -150,7 +203,7 @@ private:
 
     bool handleRequest(const QHttpServerRequest &request, QTcpSocket *socket) override final;
 
-    void sendResponse(const QHttpServerResponse &response,
+    void sendResponse(QHttpServerResponse &&response,
                       const QHttpServerRequest &request,
                       QTcpSocket *socket);
 };

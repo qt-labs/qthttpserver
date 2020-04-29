@@ -23,7 +23,9 @@ HEADERS += \
     qhttpserverrouter_p.h \
     qhttpserverrouterrule.h \
     qhttpserverrouterrule_p.h \
-    qhttpserverrouterviewtraits.h
+    qhttpserverrouterviewtraits.h \
+    qhttpserverviewtraits.h \
+    qhttpserverviewtraits_impl.h
 
 SOURCES += \
     qabstracthttpserver.cpp \
