@@ -35,6 +35,7 @@
 #include <QtCore/qmetaobject.h>
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qregularexpression.h>
+#include <QtCore/qstringbuilder.h>
 #include <QtCore/qdebug.h>
 
 QT_BEGIN_NAMESPACE
