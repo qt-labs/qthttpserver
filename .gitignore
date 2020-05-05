@@ -59,6 +59,7 @@ core
 Makefile*
 !/qmake/Makefile.win32*
 !/qmake/Makefile.unix
+object_script.*
 pcviewer.cfg
 tags
 *~
