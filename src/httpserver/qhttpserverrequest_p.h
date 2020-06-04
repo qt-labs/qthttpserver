@@ -88,6 +88,7 @@ public:
 
     void clear();
     QHostAddress remoteAddress;
+    bool handling{false};
 
 private:
     static http_parser_settings httpParserSettings;

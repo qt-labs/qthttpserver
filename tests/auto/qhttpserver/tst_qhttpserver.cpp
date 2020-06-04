@@ -46,6 +46,7 @@
 #include <QtCore/qjsonobject.h>
 #include <QtCore/qjsonvalue.h>
 #include <QtCore/qjsonarray.h>
+#include <QtCore/qtimer.h>
 
 #include <QtNetwork/qnetworkaccessmanager.h>
 #include <QtNetwork/qnetworkreply.h>
@@ -130,6 +131,7 @@ private slots:
     void invalidRouterArguments();
     void checkRouteLambdaCapture();
     void afterRequest();
+    void disconnectedInEventLoop();
 
 private:
     void checkReply(QNetworkReply *reply, const QString &response);
@@ -914,6 +916,24 @@ void tst_QHttpServer::checkReply(QNetworkReply *reply, const QString &response) 
 
     reply->deleteLater();
 };
+
+void tst_QHttpServer::disconnectedInEventLoop()
+{
+    httpserver.route("/event-loop/", [] () {
+        QEventLoop loop;
+        QTimer::singleShot(1000, &loop, &QEventLoop::quit);
+        loop.exec();
+        return QHttpServerResponse::StatusCode::Ok;
+    });
+
+    const QUrl requestUrl(urlBase.arg("/event-loop/"));
+    auto reply = networkAccessManager.get(QNetworkRequest(requestUrl));
+    QTimer::singleShot(500, reply, &QNetworkReply::abort); // cancel connection
+    QEventLoop loop;
+    connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+    loop.exec();
+    reply->deleteLater();
+}
 
 QT_END_NAMESPACE
 

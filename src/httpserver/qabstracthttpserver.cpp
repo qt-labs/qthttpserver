@@ -63,8 +63,12 @@ void QAbstractHttpServerPrivate::handleNewConnections()
             handleReadyRead(socket, request);
         });
 
-        QObject::connect(socket, &QTcpSocket::disconnected, &QObject::deleteLater);
-        QObject::connect(socket, &QObject::destroyed, [request] () {
+        QObject::connect(socket, &QTcpSocket::disconnected, socket, [request, socket] () {
+            if (!request->d->handling)
+                socket->deleteLater();
+        });
+
+        QObject::connect(socket, &QObject::destroyed, socket, [request] () {
             delete request;
         });
     }
@@ -118,8 +122,12 @@ void QAbstractHttpServerPrivate::handleReadyRead(QTcpSocket *socket,
     }
 
     socket->commitTransaction();
+    request->d->handling = true;
     if (!q->handleRequest(*request, socket))
         Q_EMIT q->missingHandler(*request, socket);
+    request->d->handling = false;
+    if (socket->state() == QAbstractSocket::UnconnectedState)
+        socket->deleteLater();
 }
 
 QAbstractHttpServer::QAbstractHttpServer(QObject *parent)
