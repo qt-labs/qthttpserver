@@ -61,6 +61,33 @@ QT_BEGIN_NAMESPACE
     \endcode
 */
 
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+
+QHttpServerResponse QFutureInterface<QHttpServerResponse>::takeResult()
+{
+    if (isCanceled()) {
+        exceptionStore().throwPossibleException();
+        return QHttpServerResponse::StatusCode::NotFound;
+    }
+    // Note: we wait for all, this is intentional,
+    // not to mess with other unready results.
+    waitForResult(-1);
+
+#if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
+    std::lock_guard<QMutex> locker{*mutex()};
+#else
+    std::lock_guard<QMutex> locker{mutex(0)};
+#endif
+    QtPrivate::ResultIteratorBase position = resultStoreBase().resultAt(0);
+    auto ret = std::move_if_noexcept(
+        *const_cast<QHttpServerResponse *>(position.pointer<QHttpServerResponse>()));
+    resultStoreBase().template clear<QHttpServerResponse>();
+
+    return ret;
+}
+
+#endif // QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+
 struct QResponseWatcher : public QFutureWatcher<QHttpServerResponse>
 {
     Q_OBJECT
