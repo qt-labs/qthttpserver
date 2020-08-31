@@ -88,7 +88,7 @@ void QAbstractHttpServerPrivate::handleReadyRead(QTcpSocket *socket,
         request->d->clear();
 
     if (!request->d->parse(socket)) {
-        socket->disconnect();
+        socket->disconnectFromHost();
         return;
     }
 
