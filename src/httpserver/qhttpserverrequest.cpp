@@ -253,7 +253,8 @@ int QHttpServerRequestPrivate::onChunkComplete(http_parser *httpParser)
 }
 
 QHttpServerRequest::QHttpServerRequest(const QHostAddress &remoteAddress) :
-    d(new QHttpServerRequestPrivate(remoteAddress))
+    d(new QHttpServerRequestPrivate(remoteAddress)),
+    m_socket(nullptr)
 {}
 
 QHttpServerRequest::~QHttpServerRequest()
