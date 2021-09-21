@@ -90,6 +90,9 @@ public:
     QVariantMap headers() const;
     QByteArray body() const;
     QHostAddress remoteAddress() const;
+    
+    void setSocket(QTcpSocket *socket) {this->m_socket = socket;};
+	QTcpSocket* socket() const {return this->m_socket;} ;
 
 private:
     Q_DISABLE_COPY(QHttpServerRequest)
@@ -101,6 +104,7 @@ private:
     explicit QHttpServerRequest(const QHostAddress &remoteAddress);
 
     QScopedPointer<QHttpServerRequestPrivate> d;
+    QTcpSocket * m_socket;
 };
 
 QT_END_NAMESPACE

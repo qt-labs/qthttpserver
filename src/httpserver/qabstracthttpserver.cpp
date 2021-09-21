@@ -80,6 +80,8 @@ void QAbstractHttpServerPrivate::handleReadyRead(QTcpSocket *socket,
     Q_Q(QAbstractHttpServer);
     Q_ASSERT(socket);
     Q_ASSERT(request);
+    
+    request->setSocket(socket);
 
     if (!socket->isTransactionStarted())
         socket->startTransaction();
