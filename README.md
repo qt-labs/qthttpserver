@@ -1,5 +1,5 @@
 # qthttpserver
-Qt HTTP Server
+Qt HTTP Server installation steps
 
 ## Installation on Windows
 Here are the requirements to install The Qt HTTP server on Windows
