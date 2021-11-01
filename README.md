@@ -15,3 +15,4 @@ Here are the requirements to install The Qt HTTP server on Windows
 4. Initialize submodules `git submodule update --init`
 5. `qmake`
 6. `nmake`
+7. `nmake install`
